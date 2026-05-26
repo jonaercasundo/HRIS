@@ -32,16 +32,19 @@ class HRISReportController extends Controller
         return view('reports.late', compact('data', 'date'));
     }
 
-    public function noTimeOut()
+    public function noTimeOut(Request $request)
     {
+        $date = $request->date ?? date('Y-m-d');
+
         $data = DB::table('t_biometrics')
+            ->whereDate('biometricsDate', $date)
             ->where(function ($q) {
                 $q->whereNull('biometricsTimeOut')
-                  ->orWhere('biometricsTimeOut', '');
+                ->orWhere('biometricsTimeOut', '');
             })
-            ->orderBy('biometricsDate', 'desc')
+            ->orderBy('biometricsTimeIn')
             ->get();
 
-        return view('reports.notimeout', compact('data'));
+        return view('reports.notimeout', compact('data', 'date'));
     }
 }
