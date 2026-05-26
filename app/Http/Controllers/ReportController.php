@@ -22,22 +22,32 @@ class ReportController extends Controller
                     ->where('out_log.status', 'OUT');
             });
 
-        // ✅ DATE FILTER (IMPORTANT PART)
-        if ($from && $to) {
+        // Date Filter
+        if (!empty($from) && !empty($to)) {
             $query->whereBetween('in_log.date_log', [$from, $to]);
         }
 
-        $data = $query->orderBy('in_log.date_log', 'desc')->get();
+        $data = $query
+            ->select(
+                'in_log.employee_no',
+                'in_log.bio_name',
+                'in_log.date_log',
+                'in_log.time_log as time_in'
+            )
+            ->orderBy('in_log.date_log', 'desc')
+            ->orderBy('in_log.time_log', 'desc')
+            ->get();
 
         return view('reports.no_time_out', compact('data', 'from', 'to'));
     }
+
     public function noTimeIn(Request $request)
     {
         $from = $request->from;
         $to = $request->to;
 
         $logs = DB::table('zkteco_dtr_log')
-            ->when($from && $to, function ($q) use ($from, $to) {
+            ->when(!empty($from) && !empty($to), function ($q) use ($from, $to) {
                 $q->whereBetween('date_log', [$from, $to]);
             })
             ->orderBy('employee_no')
@@ -48,34 +58,37 @@ class ReportController extends Controller
         $grouped = [];
 
         foreach ($logs as $log) {
+
             $key = $log->employee_no . '_' . $log->date_log;
 
             if (!isset($grouped[$key])) {
                 $grouped[$key] = [
                     'employee_no' => $log->employee_no,
-                    'bio_name' => $log->bio_name,
-                    'date_log' => $log->date_log,
-                    'time_in' => null,
-                    'time_out' => null,
+                    'bio_name'    => $log->bio_name,
+                    'date_log'    => $log->date_log,
+                    'time_in'     => null,
+                    'time_out'    => null,
                 ];
             }
 
-            if ($log->status === 'IN') {
+            if ($log->status == 'IN') {
                 $grouped[$key]['time_in'] = $log->time_log;
             }
 
-            if ($log->status === 'OUT') {
+            if ($log->status == 'OUT') {
                 $grouped[$key]['time_out'] = $log->time_log;
             }
         }
 
-        // FILTER ONLY NO TIME IN
+        // Filter records with NO TIME IN
         $result = array_filter($grouped, function ($row) {
             return empty($row['time_in']);
         });
 
         return view('reports.no_time_in', [
-            'data' => array_values($result)
+            'data' => array_values($result),
+            'from' => $from,
+            'to'   => $to
         ]);
     }
 }

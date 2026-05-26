@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>No Time Out Report</title>
+    <title>Attendance Exceptions Report</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 
 <body class="p-4">
 
+{{-- ================= NO TIME OUT ================= --}}
 <h3>No Time Out Employees</h3>
 
 <form method="GET" class="mb-3">
@@ -32,23 +33,31 @@
             <th>Employee No</th>
             <th>Name</th>
             <th>Date</th>
-            <th>Time</th>
+            <th>Time In</th>
             <th>Status</th>
         </tr>
     </thead>
 
     <tbody>
-        @foreach($data as $row)
+        @forelse($data as $row)
             <tr>
-                <td>{{ $row->employee_no }}</td>
-                <td>{{ $row->bio_name }}</td>
-                <td>{{ $row->date_log }}</td>
-                <td>{{ $row->time_log }}</td>
+                <td>{{ $row->employee_no ?? '-' }}</td>
+                <td>{{ $row->bio_name ?? '-' }}</td>
+                <td>{{ $row->date_log ?? '-' }}</td>
+                <td>{{ $row->time_in ?? '-' }}</td>
                 <td><span class="text-danger">NO TIME OUT</span></td>
             </tr>
-        @endforeach
+        @empty
+            <tr>
+                <td colspan="5" class="text-center">No records found</td>
+            </tr>
+        @endforelse
     </tbody>
 </table>
+
+<hr>
+
+{{-- ================= NO TIME IN ================= --}}
 <h3>No Time In Employees</h3>
 
 <form method="GET" class="mb-3">
@@ -74,24 +83,25 @@
             <th>Employee No</th>
             <th>Name</th>
             <th>Date</th>
-            <th>Time In</th>
             <th>Status</th>
         </tr>
     </thead>
 
     <tbody>
-        @foreach($data as $row)
-        <tr>
-            <td>{{ $row['employee_no'] }}</td>
-            <td>{{ $row['bio_name'] }}</td>
-            <td>{{ $row['date_log'] }}</td>
-            <td class="text-danger">NO TIME IN</td>
-            <td>
-                <span class="text-danger">INCOMPLETE</span>
-            </td>
-        </tr>
-        @endforeach
+        @forelse($data as $row)
+            <tr>
+                <td>{{ $row['employee_no'] ?? '-' }}</td>
+                <td>{{ $row['bio_name'] ?? '-' }}</td>
+                <td>{{ $row['date_log'] ?? '-' }}</td>
+                <td><span class="text-danger">NO TIME IN</span></td>
+            </tr>
+        @empty
+            <tr>
+                <td colspan="4" class="text-center">No records found</td>
+            </tr>
+        @endforelse
     </tbody>
 </table>
+
 </body>
 </html>
