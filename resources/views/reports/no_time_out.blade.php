@@ -88,11 +88,11 @@
     </thead>
 
     <tbody>
-        @forelse($data as $row)
+        @forelse($noTimeIn as $row)
             <tr>
-                <td>{{ $row['employee_no'] ?? '-' }}</td>
-                <td>{{ $row['bio_name'] ?? '-' }}</td>
-                <td>{{ $row['date_log'] ?? '-' }}</td>
+                <td>{{ $row->employee_no ?? '-' }}</td>
+                <td>{{ $row->bio_name ?? '-' }}</td>
+                <td>{{ $row->date_log ?? '-' }}</td>
                 <td><span class="text-danger">NO TIME IN</span></td>
             </tr>
         @empty
