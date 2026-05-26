@@ -12,30 +12,22 @@ class ReportController extends Controller
         $from = $request->from;
         $to = $request->to;
 
-        $query = DB::table('zkteco_dtr_log as in_log')
-            ->where('in_log.status', 'IN')
-            ->whereNotExists(function ($q) {
-                $q->select(DB::raw(1))
-                    ->from('zkteco_dtr_log as out_log')
-                    ->whereColumn('out_log.employee_no', 'in_log.employee_no')
-                    ->whereColumn('out_log.date_log', 'in_log.date_log')
-                    ->where('out_log.status', 'OUT');
-            });
+        $query = DB::table('t_biometrics')
+            ->whereNull('biometricsTimeOut');
 
-        // Date Filter
         if (!empty($from) && !empty($to)) {
-            $query->whereBetween('in_log.date_log', [$from, $to]);
+            $query->whereBetween('biometricsDate', [$from, $to]);
         }
 
         $data = $query
             ->select(
-                'in_log.employee_no',
-                'in_log.bio_name',
-                'in_log.date_log',
-                'in_log.time_log as time_in'
+                'employeeNo',
+                'biometricsDate',
+                'biometricsTimeIn',
+                'biometricsTimeOut'
             )
-            ->orderBy('in_log.date_log', 'desc')
-            ->orderBy('in_log.time_log', 'desc')
+            ->orderBy('biometricsDate', 'desc')
+            ->orderBy('biometricsTimeIn', 'desc')
             ->get();
 
         return view('reports.no_time_out', compact('data', 'from', 'to'));
@@ -46,49 +38,23 @@ class ReportController extends Controller
         $from = $request->from;
         $to = $request->to;
 
-        $logs = DB::table('zkteco_dtr_log')
-            ->when(!empty($from) && !empty($to), function ($q) use ($from, $to) {
-                $q->whereBetween('date_log', [$from, $to]);
-            })
-            ->orderBy('employee_no')
-            ->orderBy('date_log')
-            ->orderBy('time_log')
-            ->get();
+        $query = DB::table('t_biometrics')
+            ->whereNull('biometricsTimeIn');
 
-        $grouped = [];
-
-        foreach ($logs as $log) {
-
-            $key = $log->employee_no . '_' . $log->date_log;
-
-            if (!isset($grouped[$key])) {
-                $grouped[$key] = [
-                    'employee_no' => $log->employee_no,
-                    'bio_name'    => $log->bio_name,
-                    'date_log'    => $log->date_log,
-                    'time_in'     => null,
-                    'time_out'    => null,
-                ];
-            }
-
-            if ($log->status == 'IN') {
-                $grouped[$key]['time_in'] = $log->time_log;
-            }
-
-            if ($log->status == 'OUT') {
-                $grouped[$key]['time_out'] = $log->time_log;
-            }
+        if (!empty($from) && !empty($to)) {
+            $query->whereBetween('biometricsDate', [$from, $to]);
         }
 
-        // Filter records with NO TIME IN
-        $result = array_filter($grouped, function ($row) {
-            return empty($row['time_in']);
-        });
+        $data = $query
+            ->select(
+                'employeeNo',
+                'biometricsDate',
+                'biometricsTimeIn',
+                'biometricsTimeOut'
+            )
+            ->orderBy('biometricsDate', 'desc')
+            ->get();
 
-        return view('reports.no_time_in', [
-            'data' => array_values($result),
-            'from' => $from,
-            'to'   => $to
-        ]);
+        return view('reports.no_time_in', compact('data', 'from', 'to'));
     }
 }
