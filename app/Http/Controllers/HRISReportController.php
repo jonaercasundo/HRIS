@@ -70,27 +70,28 @@ class HRISReportController extends Controller
 
     public function late(Request $request)
     {
-        $date = $request->date ?? date('Y-m-d');
+        $from = $request->from;
+        $to   = $request->to;
 
-        $data = DB::table('zkteco_dtr_tag_temp as b')
+        $query = DB::table('zkteco_dtr_tag_temp as b')
             ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employee_no')
-            ->whereDate('b.date_log', $date)
-            ->where('b.status', 'IN')
+            ->where('b.tag', 'IN')
             ->whereTime('b.time_log', '>', '08:00:00')
             ->orderBy('b.employee_no')
-            ->orderBy('b.time_log')
-            ->select(
-                'b.employee_no',
-                'b.date_log',
-                'b.time_log',
-                DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
-            )
-            ->get();
+            ->orderBy('b.date_log');
 
-        return view('reports.late', [
-            'data' => $data,
-            'date' => $date
-        ]);
+        if ($from && $to) {
+            $query->whereBetween('b.date_log', [$from, $to]);
+        }
+
+        $data = $query->select(
+            'b.employee_no as employeeNo',
+            'b.date_log',
+            'b.time_log',
+            DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
+        )->get();
+
+        return view('reports.late', compact('data', 'from', 'to'));
     }
 
     public function noTimeOut(Request $request)
