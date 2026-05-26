@@ -11,7 +11,7 @@ class HRISReportController extends Controller
     {
         $date = $request->date ?? date('Y-m-d');
 
-        $data = DB::table('tbl_biometrics')
+        $data = DB::table('t_biometrics')
             ->whereDate('time_in', $date)
             ->get();
 
@@ -21,7 +21,7 @@ class HRISReportController extends Controller
     {
         $date = $request->date ?? date('Y-m-d');
 
-        $data = DB::table('tbl_biometrics')
+        $data = DB::table('t_biometrics')
             ->whereDate('time_in', $date)
             ->whereTime('time_in', '>', '08:00:00')
             ->get();
@@ -30,7 +30,7 @@ class HRISReportController extends Controller
     }    
     public function noTimeOut()
     {
-        $data = DB::table('tbl_biometrics')
+        $data = DB::table('t_biometrics')
             ->whereNull('time_out')
             ->orWhere('time_out', '')
             ->get();
