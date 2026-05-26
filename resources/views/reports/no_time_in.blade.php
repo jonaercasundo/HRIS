@@ -45,7 +45,7 @@
     <tbody>
         @forelse($data as $row)
             <tr>
-                <td>{{ $row->employee_no }}</td>
+                <td>{{ $row->employeeNo }}</td>
                 <td>{{ $row->bio_name ?? 'N/A' }}</td>
                 <td>{{ $row->date_log }}</td>
                 <td>{{ $row->time_out ?? 'NO TIME IN' }}</td>
