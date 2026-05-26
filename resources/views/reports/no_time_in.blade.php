@@ -14,20 +14,31 @@
     <a href="/reports/no-time-in" class="btn btn-primary">No Time In</a>
 </div>
 
-<form method="GET" class="mb-3">
+<form method="GET" action="" class="mb-3">
     <div class="row">
+
         <div class="col-md-3">
-            <input type="date" name="from" class="form-control" value="{{ request('from') }}">
+            <input type="date"
+                   name="from"
+                   class="form-control"
+                   value="{{ request('from', date('Y-m-d')) }}">
         </div>
 
         <div class="col-md-3">
-            <input type="date" name="to" class="form-control" value="{{ request('to') }}">
+            <input type="date"
+                   name="to"
+                   class="form-control"
+                   value="{{ request('to', date('Y-m-d')) }}">
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-3 d-flex gap-2">
             <button class="btn btn-primary">Filter</button>
-            <a href="/reports/no-time-in" class="btn btn-secondary">Reset</a>
+
+            <a href="/reports/no-time-in" class="btn btn-secondary">
+                Reset
+            </a>
         </div>
+
     </div>
 </form>
 
