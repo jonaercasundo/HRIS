@@ -22,7 +22,7 @@ class ReportController extends Controller
                 'b.employee_no',
                 'b.date_log',
                 'b.time_log',
-                'b.status',
+                'b.tag',
                 DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
             )
             ->get();
@@ -47,7 +47,7 @@ class ReportController extends Controller
                 ];
             }
 
-            $status = strtoupper(trim($log->status));
+            $status = strtoupper(trim($log->tag));
 
             if ($status === 'IN') {
                 $data[$key]['time_in'] = $log->time_log;
