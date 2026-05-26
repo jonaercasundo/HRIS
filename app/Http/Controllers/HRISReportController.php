@@ -63,4 +63,34 @@ class HRISReportController extends Controller
             'date' => $date
         ]);
     }
+    public function late(Request $request)
+    {
+        $date = $request->date ?? date('Y-m-d');
+
+        $data = DB::table('zkteco_dtr_log as b')
+            ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employee_no')
+            ->whereDate('b.date_log', $date)
+            ->where('b.status', 'IN')
+            ->whereTime('b.time_log', '>', '08:00:00')
+            ->orderBy('b.employee_no')
+            ->orderBy('b.time_log')
+            ->select(
+                'b.employee_no as employeeNo',
+                'b.date_log',
+                'b.time_log',
+                DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
+            )
+            ->get();
+
+        return view('reports.late', [
+            'data' => $data,
+            'date' => $date
+        ]);
+    }
+
+    public function noTimeOut(Request $request)
+    {
+        // This method is now handled by ReportController
+        return redirect()->route('reports.no-time-out');
+    }
 }
