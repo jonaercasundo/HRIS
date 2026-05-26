@@ -50,15 +50,14 @@
                 <td>{{ $row->employeeName ?? 'N/A' }}</td>
                 <td>{{ $row->biometricsDate }}</td>
                 <td>{{ $row->biometricsTimeIn }}</td>
-                <td>{{ $row->biometricsTimeOut ?? 'NO TIME OUT' }}</td>
                 <td><span class="text-danger">NO TIME OUT</span></td>
             </tr>
         @empty
             <tr>
-                <td colspan="6" class="text-center">No records found</td>
+                <td colspan="5" class="text-center">No records found</td>
             </tr>
         @endforelse
-    </tbody>
+    </tbody>    
 </table>
 
 </body>

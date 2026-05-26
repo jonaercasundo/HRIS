@@ -48,12 +48,11 @@
                 <td>{{ $row->employeeNo }}</td>
                 <td>{{ $row->employeeName ?? 'N/A' }}</td>
                 <td>{{ $row->biometricsDate }}</td>
-                <td>{{ $row->biometricsTimeOut ?? 'NO TIME IN' }}</td>
                 <td><span class="text-danger">NO TIME IN</span></td>
             </tr>
         @empty
             <tr>
-                <td colspan="5" class="text-center">No records found</td>
+                <td colspan="4" class="text-center">No records found</td>
             </tr>
         @endforelse
     </tbody>
