@@ -9,6 +9,11 @@
 
 <h3>No Time In Employees</h3>
 
+<div class="mb-3">
+    <a href="/reports/no-time-out" class="btn btn-danger">No Time Out</a>
+    <a href="/reports/no-time-in" class="btn btn-primary">No Time In</a>
+</div>
+
 <form method="GET" class="mb-3">
     <div class="row">
         <div class="col-md-3">
@@ -30,6 +35,7 @@
     <thead>
         <tr>
             <th>Employee No</th>
+            <th>Employee Name</th>
             <th>Date</th>
             <th>Time Out</th>
             <th>Status</th>
@@ -40,13 +46,14 @@
         @forelse($data as $row)
             <tr>
                 <td>{{ $row->employee_no }}</td>
+                <td>{{ $row->bio_name ?? 'N/A' }}</td>
                 <td>{{ $row->date_log }}</td>
                 <td>{{ $row->time_out ?? 'NO TIME IN' }}</td>
                 <td><span class="text-danger">NO TIME IN</span></td>
             </tr>
         @empty
             <tr>
-                <td colspan="4" class="text-center">No records found</td>
+                <td colspan="5" class="text-center">No records found</td>
             </tr>
         @endforelse
     </tbody>

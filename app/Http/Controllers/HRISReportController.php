@@ -11,9 +11,14 @@ class HRISReportController extends Controller
     {
         $date = $request->date ?? date('Y-m-d');
 
-        $data = DB::table('t_biometrics')
-            ->whereDate('biometricsDate', $date)
-            ->orderBy('biometricsTimeIn')
+        $data = DB::table('t_biometrics as b')
+            ->leftJoin('tbl_masterlist as e', 'e.employeeNo', '=', 'b.employeeNo')
+            ->whereDate('b.biometricsDate', $date)
+            ->orderBy('b.biometricsTimeIn')
+            ->select(
+                'b.*',
+                'e.employeeName'
+            )
             ->get();
 
         return view('reports.daily', compact('data', 'date'));
@@ -23,10 +28,15 @@ class HRISReportController extends Controller
     {
         $date = $request->date ?? date('Y-m-d');
 
-        $data = DB::table('t_biometrics')
-            ->whereDate('biometricsDate', $date)
-            ->whereTime('biometricsTimeIn', '>', '08:00:00')
-            ->orderBy('biometricsTimeIn')
+        $data = DB::table('t_biometrics as b')
+            ->leftJoin('tbl_masterlist as e', 'e.employeeNo', '=', 'b.employeeNo')
+            ->whereDate('b.biometricsDate', $date)
+            ->whereTime('b.biometricsTimeIn', '>', '08:00:00')
+            ->orderBy('b.biometricsTimeIn')
+            ->select(
+                'b.*',
+                'e.employeeName'
+            )
             ->get();
 
         return view('reports.late', compact('data', 'date'));
@@ -36,13 +46,18 @@ class HRISReportController extends Controller
     {
         $date = $request->date ?? date('Y-m-d');
 
-        $data = DB::table('t_biometrics')
-            ->whereDate('biometricsDate', $date)
+        $data = DB::table('t_biometrics as b')
+            ->leftJoin('tbl_masterlist as e', 'e.employeeNo', '=', 'b.employeeNo')
+            ->whereDate('b.biometricsDate', $date)
             ->where(function ($q) {
-                $q->whereNull('biometricsTimeOut')
-                ->orWhere('biometricsTimeOut', '');
+                $q->whereNull('b.biometricsTimeOut')
+                  ->orWhere('b.biometricsTimeOut', '');
             })
-            ->orderBy('biometricsTimeIn')
+            ->orderBy('b.biometricsTimeIn')
+            ->select(
+                'b.*',
+                'e.employeeName'
+            )
             ->get();
 
         return view('reports.notimeout', compact('data', 'date'));
