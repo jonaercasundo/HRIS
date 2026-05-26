@@ -11,64 +11,56 @@ class HRISReportController extends Controller
     {
         $date = $request->date ?? date('Y-m-d');
 
-        $data = DB::table('t_biometrics as b')
-            ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employeeNo')
-            ->whereDate('b.biometricsDate', $date)
-            ->orderBy('b.biometricsTimeIn')
+        $logs = DB::table('zkteco_dtr_log as b')
+            ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employee_no')
+            ->whereDate('b.date_log', $date)
+            ->orderBy('b.employee_no')
+            ->orderBy('b.time_log')
             ->select(
-                'b.employeeNo',
-                'b.biometricsDate',
-                'b.biometricsTimeIn',
-                'b.biometricsTimeOut',
+                'b.employee_no as employeeNo',
+                'b.date_log',
+                'b.time_log',
+                'b.status',
                 DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
             )
             ->get();
 
-        return view('reports.daily', compact('data', 'date'));
-    }
+        $data = [];
 
-    public function late(Request $request)
-    {
-        $date = $request->date ?? date('Y-m-d');
+        foreach ($logs as $log) {
 
-        $data = DB::table('t_biometrics as b')
-            ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employeeNo')
-            ->whereDate('b.biometricsDate', $date)
-            ->whereTime('b.biometricsTimeIn', '>', '08:00:00')
-            ->orderBy('b.biometricsTimeIn')
-            ->select(
-                'b.employeeNo',
-                'b.biometricsDate',
-                'b.biometricsTimeIn',
-                'b.biometricsTimeOut',
-                DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
-            )
-            ->get();
+            $key = $log->employeeNo . '_' . $log->date_log;
 
-        return view('reports.late', compact('data', 'date'));
-    }
+            if (!isset($data[$key])) {
+                $data[$key] = [
+                    'employeeNo' => $log->employeeNo,
+                    'employeeName' => $log->employeeName,
+                    'date_log' => $log->date_log,
+                    'time_in' => null,
+                    'time_out' => null,
+                ];
+            }
 
-    public function noTimeOut(Request $request)
-    {
-        $date = $request->date ?? date('Y-m-d');
+            // IF STATUS EXISTS
+            if ($log->status === 'IN') {
+                $data[$key]['time_in'] = $log->time_log;
+            } elseif ($log->status === 'OUT') {
+                $data[$key]['time_out'] = $log->time_log;
+            }
 
-        $data = DB::table('t_biometrics as b')
-            ->leftJoin('tbl_masterlist as e', 'e.employeeNo', '=', 'b.employeeNo')
-            ->whereDate('b.biometricsDate', $date)
-            ->where(function ($q) {
-                $q->whereNull('b.biometricsTimeOut')
-                  ->orWhere('b.biometricsTimeOut', '');
-            })
-            ->orderBy('b.biometricsTimeIn')
-            ->select(
-                'b.employeeNo',
-                'b.biometricsDate',
-                'b.biometricsTimeIn',
-                'b.biometricsTimeOut',
-                DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
-            )
-            ->get();
+            // IF STATUS IS NULL → fallback logic
+            if ($log->status === null) {
+                if (!$data[$key]['time_in']) {
+                    $data[$key]['time_in'] = $log->time_log;
+                } else {
+                    $data[$key]['time_out'] = $log->time_log;
+                }
+            }
+        }
 
-        return view('reports.notimeout', compact('data', 'date'));
+        return view('reports.daily', [
+            'data' => array_values($data),
+            'date' => $date
+        ]);
     }
 }
