@@ -111,7 +111,7 @@ class HRISReportController extends Controller
             ->havingRaw('time_out IS NULL OR time_out = ""')
             ->get();
 
-        return view('reports.notimeout', [
+        return view('reports.no_time_out', [
             'data' => $data,
             'date' => $date
         ]);
