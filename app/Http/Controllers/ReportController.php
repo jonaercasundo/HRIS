@@ -156,7 +156,9 @@ class ReportController extends Controller
         }
 
         $query = DB::table('zkteco_dtr_tag_temp as b')
-            ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employee_no')
+            ->leftJoin('e_basicinfo as e', function ($join) {
+                $join->on(DB::raw('TRIM(b.employee_no)'), '=', DB::raw('TRIM(e.employeeNo)'));
+            })
             ->where('b.tag', 'IN')
             ->whereTime('b.time_log', '>', '08:00:00')
             ->when($from && $to, function ($q) use ($from, $to) {
@@ -169,7 +171,12 @@ class ReportController extends Controller
             'b.employee_no as employeeNo',
             'b.date_log',
             'b.time_log',
-            DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
+            DB::raw("
+                COALESCE(
+                    CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName),
+                    b.employee_no
+                ) as employeeName
+            ")
         )->get();
 
         return view('reports.late', compact('data', 'from', 'to'));
