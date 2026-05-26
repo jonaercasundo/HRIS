@@ -12,7 +12,7 @@ class HRISReportController extends Controller
         $date = $request->date ?? date('Y-m-d');
 
         $data = DB::table('t_biometrics as b')
-            ->leftJoin('tbl_masterlist as e', 'e.employeeNo', '=', 'b.employeeNo')
+            ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employeeNo')
             ->whereDate('b.biometricsDate', $date)
             ->orderBy('b.biometricsTimeIn')
             ->select(
@@ -32,7 +32,7 @@ class HRISReportController extends Controller
         $date = $request->date ?? date('Y-m-d');
 
         $data = DB::table('t_biometrics as b')
-            ->leftJoin('tbl_masterlist as e', 'e.employeeNo', '=', 'b.employeeNo')
+            ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employeeNo')
             ->whereDate('b.biometricsDate', $date)
             ->whereTime('b.biometricsTimeIn', '>', '08:00:00')
             ->orderBy('b.biometricsTimeIn')
