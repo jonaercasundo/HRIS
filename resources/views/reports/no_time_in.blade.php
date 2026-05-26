@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>No Time Out Report</title>
+    <title>No Time In Report</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 </head>
 
 <body class="p-4">
 
-<h3>No Time Out Employees</h3>
+<h3>No Time In Employees</h3>
 
 <form method="GET" class="mb-3">
     <div class="row">
@@ -21,7 +21,7 @@
 
         <div class="col-md-3">
             <button class="btn btn-primary">Filter</button>
-            <a href="/reports/no-time-out" class="btn btn-secondary">Reset</a>
+            <a href="/reports/no-time-in" class="btn btn-secondary">Reset</a>
         </div>
     </div>
 </form>
@@ -31,7 +31,6 @@
         <tr>
             <th>Employee No</th>
             <th>Date</th>
-            <th>Time In</th>
             <th>Time Out</th>
             <th>Status</th>
         </tr>
@@ -40,15 +39,14 @@
     <tbody>
         @forelse($data as $row)
             <tr>
-                <td>{{ $row->employeeNo }}</td>
-                <td>{{ $row->biometricsDate }}</td>
-                <td>{{ $row->biometricsTimeIn }}</td>
-                <td>{{ $row->biometricsTimeOut ?? 'NO TIME OUT' }}</td>
-                <td><span class="text-danger">NO TIME OUT</span></td>
+                <td>{{ $row->employee_no }}</td>
+                <td>{{ $row->date_log }}</td>
+                <td>{{ $row->time_out ?? 'NO TIME IN' }}</td>
+                <td><span class="text-danger">NO TIME IN</span></td>
             </tr>
         @empty
             <tr>
-                <td colspan="5" class="text-center">No records found</td>
+                <td colspan="4" class="text-center">No records found</td>
             </tr>
         @endforelse
     </tbody>
