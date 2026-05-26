@@ -47,13 +47,17 @@ class ReportController extends Controller
                 ];
             }
 
-            $status = strtoupper(trim($log->tag));
+            $tag = strtoupper(trim($log->tag ?? ''));
 
-            if ($status === 'IN') {
-                $data[$key]['time_in'] = $log->time_log;
+            if ($tag === 'IN') {
+                // keep earliest IN
+                if (!$data[$key]['time_in']) {
+                    $data[$key]['time_in'] = $log->time_log;
+                }
             }
 
-            if ($status === 'OUT') {
+            if ($tag === 'OUT') {
+                // keep latest OUT
                 $data[$key]['time_out'] = $log->time_log;
             }
         }
@@ -102,9 +106,7 @@ class ReportController extends Controller
         $logs = $this->getLogs($from, $to);
         $data = $this->buildAttendance($logs);
 
-        $filtered = array_filter($data, function ($row) {
-            return empty($row['time_out']);
-        });
+        $filtered = array_filter($data, fn($row) => empty($row['time_out']));
 
         return view('reports.no_time_out', [
             'data' => array_values($filtered),
@@ -130,14 +132,46 @@ class ReportController extends Controller
         $logs = $this->getLogs($from, $to);
         $data = $this->buildAttendance($logs);
 
-        $filtered = array_filter($data, function ($row) {
-            return empty($row['time_in']);
-        });
+        $filtered = array_filter($data, fn($row) => empty($row['time_in']));
 
         return view('reports.no_time_in', [
             'data' => array_values($filtered),
             'from' => $from,
             'to'   => $to
         ]);
+    }
+
+    // ================= LATE =================
+    public function late(Request $request)
+    {
+        $from = $request->from;
+        $to   = $request->to;
+
+        if (!$from || !$to) {
+            return view('reports.late', [
+                'data' => [],
+                'from' => null,
+                'to'   => null
+            ]);
+        }
+
+        $query = DB::table('zkteco_dtr_tag_temp as b')
+            ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employee_no')
+            ->where('b.tag', 'IN')
+            ->whereTime('b.time_log', '>', '08:00:00')
+            ->when($from && $to, function ($q) use ($from, $to) {
+                $q->whereBetween('b.date_log', [$from, $to]);
+            })
+            ->orderBy('b.employee_no')
+            ->orderBy('b.date_log');
+
+        $data = $query->select(
+            'b.employee_no as employeeNo',
+            'b.date_log',
+            'b.time_log',
+            DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
+        )->get();
+
+        return view('reports.late', compact('data', 'from', 'to'));
     }
 }

@@ -16,7 +16,7 @@ use App\Http\Controllers\ReportController;
 */
 
 Route::get('/reports/daily', [HRISReportController::class, 'daily']);
-Route::get('/reports/late', [HRISReportController::class, 'late']);
+Route::get('/reports/late', [ReportController::class, 'late']);
 Route::get('/reports/notimeout', [HRISReportController::class, 'noTimeOut']);
 Route::get('/', function () {
     return view('welcome');
