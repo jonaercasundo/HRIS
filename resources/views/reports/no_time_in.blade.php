@@ -46,9 +46,9 @@
         @forelse($data as $row)
             <tr>
                 <td>{{ $row->employeeNo }}</td>
-                <td>{{ $row->bio_name ?? 'N/A' }}</td>
-                <td>{{ $row->date_log }}</td>
-                <td>{{ $row->time_out ?? 'NO TIME IN' }}</td>
+                <td>{{ $row->employeeName ?? 'N/A' }}</td>
+                <td>{{ $row->biometricsDate }}</td>
+                <td>{{ $row->biometricsTimeOut ?? 'NO TIME IN' }}</td>
                 <td><span class="text-danger">NO TIME IN</span></td>
             </tr>
         @empty
