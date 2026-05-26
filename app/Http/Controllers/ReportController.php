@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
-    // ================= GET RAW LOGS =================
     private function getLogs($from, $to)
     {
         return DB::table('zkteco_dtr_tag_temp as b')
@@ -28,7 +27,6 @@ class ReportController extends Controller
             ->get();
     }
 
-    // ================= BUILD ATTENDANCE =================
     private function buildAttendance($logs)
     {
         $data = [];
@@ -65,7 +63,6 @@ class ReportController extends Controller
         return $data;
     }
 
-    // ================= DAILY =================
     public function daily(Request $request)
     {
         $from = $request->from;
@@ -89,7 +86,6 @@ class ReportController extends Controller
         ]);
     }
 
-    // ================= NO TIME OUT =================
     public function noTimeOut(Request $request)
     {
         $from = $request->from;
@@ -115,7 +111,6 @@ class ReportController extends Controller
         ]);
     }
 
-    // ================= NO TIME IN =================
     public function noTimeIn(Request $request)
     {
         $from = $request->from;
@@ -140,8 +135,6 @@ class ReportController extends Controller
             'to'   => $to
         ]);
     }
-
-    // ================= LATE =================
     public function late(Request $request)
     {
         $from = $request->from;
