@@ -16,8 +16,11 @@ class HRISReportController extends Controller
             ->whereDate('b.biometricsDate', $date)
             ->orderBy('b.biometricsTimeIn')
             ->select(
-                'b.*',
-                'e.employeeName'
+                'b.employeeNo',
+                'b.biometricsDate',
+                'b.biometricsTimeIn',
+                'b.biometricsTimeOut',
+                DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
             )
             ->get();
 
@@ -30,14 +33,16 @@ class HRISReportController extends Controller
 
         $data = DB::table('t_biometrics as b')
             ->leftJoin('tbl_masterlist as e', 'e.employeeNo', '=', 'b.employeeNo')
+            ->whereDate('b.biometricsDate', $date)
+            ->whereTime('b.biometricsTimeIn', '>', '08:00:00')
+            ->orderBy('b.biometricsTimeIn')
             ->select(
                 'b.employeeNo',
                 'b.biometricsDate',
                 'b.biometricsTimeIn',
                 'b.biometricsTimeOut',
-                DB::raw("CONCAT(e.firstName, ' ', COALESCE(e.middleName,''), ' ', e.lastName) as employeeName")
+                DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
             )
-            ->whereDate('b.biometricsDate', $date)
             ->get();
 
         return view('reports.late', compact('data', 'date'));
@@ -56,8 +61,11 @@ class HRISReportController extends Controller
             })
             ->orderBy('b.biometricsTimeIn')
             ->select(
-                'b.*',
-                'e.employeeName'
+                'b.employeeNo',
+                'b.biometricsDate',
+                'b.biometricsTimeIn',
+                'b.biometricsTimeOut',
+                DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
             )
             ->get();
 
