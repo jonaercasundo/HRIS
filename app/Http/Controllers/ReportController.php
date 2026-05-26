@@ -97,22 +97,103 @@ class ReportController extends Controller
     {
         $date = $request->date ?? date('Y-m-d');
 
-        $data = DB::table('zkteco_dtr_tag_temp as b')
+        $logs = DB::table('zkteco_dtr_tag_temp as b')
             ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employee_no')
             ->whereDate('b.date_log', $date)
-            ->groupBy('b.employee_no', 'b.date_log', 'e.firstName', 'e.middleName', 'e.lastName')
+            ->orderBy('b.employee_no')
+            ->orderBy('b.time_log')
             ->select(
                 'b.employee_no',
                 'b.date_log',
-                DB::raw("MAX(CASE WHEN b.status='IN' THEN b.time_log END) as time_in"),
-                DB::raw("MAX(CASE WHEN b.status='OUT' THEN b.time_log END) as time_out"),
+                'b.time_log',
+                'b.status',
                 DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
             )
-            ->havingRaw('time_out IS NULL OR time_out = ""')
             ->get();
 
+        $data = [];
+
+        foreach ($logs as $log) {
+            $key = $log->employee_no . '_' . $log->date_log;
+
+            if (!isset($data[$key])) {
+                $data[$key] = [
+                    'employeeNo' => $log->employee_no,
+                    'employeeName' => $log->employeeName ?? 'N/A',
+                    'date_log' => $log->date_log,
+                    'time_in' => null,
+                    'time_out' => null,
+                ];
+            }
+
+            if ($log->status === 'IN') {
+                $data[$key]['time_in'] = $log->time_log;
+            }
+
+            if ($log->status === 'OUT') {
+                $data[$key]['time_out'] = $log->time_log;
+            }
+        }
+
+        $filtered = array_filter($data, function ($row) {
+            return empty($row['time_out']);
+        });
+
         return view('reports.no_time_out', [
-            'data' => $data,
+            'data' => array_values($filtered),
+            'date' => $date
+        ]);
+    }
+    public function noTimeIn(Request $request)
+    {
+        $date = $request->date ?? date('Y-m-d');
+
+        $logs = DB::table('zkteco_dtr_tag_temp as b')
+            ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employee_no')
+            ->whereDate('b.date_log', $date)
+            ->orderBy('b.employee_no')
+            ->orderBy('b.time_log')
+            ->select(
+                'b.employee_no',
+                'b.date_log',
+                'b.time_log',
+                'b.status',
+                DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
+            )
+            ->get();
+
+        $data = [];
+
+        foreach ($logs as $log) {
+
+            $key = $log->employee_no . '_' . $log->date_log;
+
+            if (!isset($data[$key])) {
+                $data[$key] = [
+                    'employeeNo' => $log->employee_no,
+                    'employeeName' => $log->employeeName ?? 'N/A',
+                    'date_log' => $log->date_log,
+                    'time_in' => null,
+                    'time_out' => null,
+                ];
+            }
+
+            if ($log->status === 'IN') {
+                $data[$key]['time_in'] = $log->time_log;
+            }
+
+            if ($log->status === 'OUT') {
+                $data[$key]['time_out'] = $log->time_log;
+            }
+        }
+
+        // FILTER: NO TIME IN ONLY
+        $result = array_filter($data, function ($row) {
+            return empty($row['time_in']);
+        });
+
+        return view('reports.no_time_in', [
+            'data' => array_values($result),
             'date' => $date
         ]);
     }

@@ -46,10 +46,10 @@
     <tbody>
         @forelse($data as $row)
             <tr>
-                <td>{{ $row->employeeNo }}</td>
-                <td>{{ $row->employeeName ?? 'N/A' }}</td>
-                <td>{{ $row->biometricsDate }}</td>
-                <td>{{ $row->biometricsTimeIn }}</td>
+                <td>{{ $row['employeeNo'] ?? '-' }}</td>
+                <td>{{ $row['employeeName'] ?? 'N/A' }}</td>
+                <td>{{ $row['date_log'] ?? '-' }}</td>
+                <td>{{ $row['time_in'] ?? '-' }}</td>
                 <td><span class="text-danger">NO TIME OUT</span></td>
             </tr>
         @empty
@@ -57,7 +57,7 @@
                 <td colspan="5" class="text-center">No records found</td>
             </tr>
         @endforelse
-    </tbody>    
+    </tbody>  
 </table>
 
 </body>
