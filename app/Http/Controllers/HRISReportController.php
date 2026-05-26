@@ -11,13 +11,13 @@ class HRISReportController extends Controller
     {
         $date = $request->date ?? date('Y-m-d');
 
-        $logs = DB::table('zkteco_dtr_log as b')
+        $logs = DB::table('zkteco_dtr_tag_temp as b')
             ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employee_no')
             ->whereDate('b.date_log', $date)
             ->orderBy('b.employee_no')
             ->orderBy('b.time_log')
             ->select(
-                'b.employee_no as employeeNo',
+                'b.employee_no',
                 'b.date_log',
                 'b.time_log',
                 'b.status',
@@ -29,27 +29,31 @@ class HRISReportController extends Controller
 
         foreach ($logs as $log) {
 
-            $key = $log->employeeNo . '_' . $log->date_log;
+            $key = $log->employee_no . '_' . $log->date_log;
 
             if (!isset($data[$key])) {
                 $data[$key] = [
-                    'employeeNo' => $log->employeeNo,
-                    'employeeName' => $log->employeeName,
-                    'date_log' => $log->date_log,
-                    'time_in' => null,
-                    'time_out' => null,
+                    'employeeNo'   => $log->employee_no,
+                    'employeeName' => $log->employeeName ?? 'N/A',
+                    'date_log'     => $log->date_log,
+                    'time_in'      => null,
+                    'time_out'     => null,
                 ];
             }
 
-            // IF STATUS EXISTS
-            if ($log->status === 'IN') {
+            // Normalize status (important fix)
+            $status = strtoupper(trim($log->status));
+
+            if ($status === 'IN') {
                 $data[$key]['time_in'] = $log->time_log;
-            } elseif ($log->status === 'OUT') {
+            }
+
+            if ($status === 'OUT') {
                 $data[$key]['time_out'] = $log->time_log;
             }
 
-            // IF STATUS IS NULL → fallback logic
-            if ($log->status === null) {
+            // fallback if no status exists
+            if ($log->status === null || $log->status === '') {
                 if (!$data[$key]['time_in']) {
                     $data[$key]['time_in'] = $log->time_log;
                 } else {
@@ -63,11 +67,12 @@ class HRISReportController extends Controller
             'date' => $date
         ]);
     }
+
     public function late(Request $request)
     {
         $date = $request->date ?? date('Y-m-d');
 
-        $data = DB::table('zkteco_dtr_log as b')
+        $data = DB::table('zkteco_dtr_tag_temp as b')
             ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employee_no')
             ->whereDate('b.date_log', $date)
             ->where('b.status', 'IN')
@@ -75,7 +80,7 @@ class HRISReportController extends Controller
             ->orderBy('b.employee_no')
             ->orderBy('b.time_log')
             ->select(
-                'b.employee_no as employeeNo',
+                'b.employee_no',
                 'b.date_log',
                 'b.time_log',
                 DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
@@ -90,7 +95,25 @@ class HRISReportController extends Controller
 
     public function noTimeOut(Request $request)
     {
-        // This method is now handled by ReportController
-        return redirect()->route('reports.no-time-out');
+        $date = $request->date ?? date('Y-m-d');
+
+        $data = DB::table('zkteco_dtr_tag_temp as b')
+            ->leftJoin('e_basicinfo as e', 'e.employeeNo', '=', 'b.employee_no')
+            ->whereDate('b.date_log', $date)
+            ->groupBy('b.employee_no', 'b.date_log', 'e.firstName', 'e.middleName', 'e.lastName')
+            ->select(
+                'b.employee_no',
+                'b.date_log',
+                DB::raw("MAX(CASE WHEN b.status='IN' THEN b.time_log END) as time_in"),
+                DB::raw("MAX(CASE WHEN b.status='OUT' THEN b.time_log END) as time_out"),
+                DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
+            )
+            ->havingRaw('time_out IS NULL OR time_out = ""')
+            ->get();
+
+        return view('reports.notimeout', [
+            'data' => $data,
+            'date' => $date
+        ]);
     }
 }
