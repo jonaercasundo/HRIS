@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
+    // ================= GET RAW LOGS =================
     private function getLogs($from, $to)
     {
         return DB::table('zkteco_dtr_tag_temp as b')
@@ -27,11 +28,13 @@ class ReportController extends Controller
             ->get();
     }
 
+    // ================= BUILD ATTENDANCE =================
     private function buildAttendance($logs)
     {
         $data = [];
 
         foreach ($logs as $log) {
+
             $key = $log->employee_no . '_' . $log->date_log;
 
             if (!isset($data[$key])) {
@@ -62,7 +65,7 @@ class ReportController extends Controller
     public function daily(Request $request)
     {
         $from = $request->from;
-        $to = $request->to;
+        $to   = $request->to;
 
         if (!$from || !$to) {
             return view('reports.daily', [
@@ -86,7 +89,7 @@ class ReportController extends Controller
     public function noTimeOut(Request $request)
     {
         $from = $request->from;
-        $to = $request->to;
+        $to   = $request->to;
 
         if (!$from || !$to) {
             return view('reports.no_time_out', [
@@ -99,7 +102,9 @@ class ReportController extends Controller
         $logs = $this->getLogs($from, $to);
         $data = $this->buildAttendance($logs);
 
-        $filtered = array_filter($data, fn($row) => empty($row['time_out']));
+        $filtered = array_filter($data, function ($row) {
+            return empty($row['time_out']);
+        });
 
         return view('reports.no_time_out', [
             'data' => array_values($filtered),
@@ -112,7 +117,7 @@ class ReportController extends Controller
     public function noTimeIn(Request $request)
     {
         $from = $request->from;
-        $to = $request->to;
+        $to   = $request->to;
 
         if (!$from || !$to) {
             return view('reports.no_time_in', [
@@ -125,7 +130,9 @@ class ReportController extends Controller
         $logs = $this->getLogs($from, $to);
         $data = $this->buildAttendance($logs);
 
-        $filtered = array_filter($data, fn($row) => empty($row['time_in']));
+        $filtered = array_filter($data, function ($row) {
+            return empty($row['time_in']);
+        });
 
         return view('reports.no_time_in', [
             'data' => array_values($filtered),
