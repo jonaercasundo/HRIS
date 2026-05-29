@@ -29,7 +29,7 @@
                             <label class="form-label fw-semibold">Full Name</label>
                             <input type="text"
                                    name="name"
-                                   class="form-control form-control-lg"
+                                   class="form-control"
                                    value="{{ old('name') }}"
                                    required>
                         </div>
@@ -39,7 +39,7 @@
                             <label class="form-label fw-semibold">Email Address</label>
                             <input type="email"
                                    name="email"
-                                   class="form-control form-control-lg"
+                                   class="form-control"
                                    value="{{ old('email') }}"
                                    required>
                         </div>
@@ -48,7 +48,7 @@
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Role</label>
 
-                            <select name="role" class="form-select form-select-lg" required>
+                            <select name="role" class="form-select" required>
                                 <option value="employee" {{ old('role') == 'employee' ? 'selected' : '' }}>
                                     Employee
                                 </option>
@@ -70,7 +70,7 @@
                             <label class="form-label fw-semibold">Password</label>
                             <input type="password"
                                    name="password"
-                                   class="form-control form-control-lg"
+                                   class="form-control"
                                    required>
                         </div>
 
@@ -79,7 +79,7 @@
                             <label class="form-label fw-semibold">Confirm Password</label>
                             <input type="password"
                                    name="password_confirmation"
-                                   class="form-control form-control-lg"
+                                   class="form-control"
                                    required>
                         </div>
 
