@@ -69,7 +69,7 @@ class ReportController extends Controller
         $to   = $request->to;
 
         if (!$from || !$to) {
-            return view('reports.daily', [
+            return view('hr.daily', [
                 'data' => [],
                 'from' => $from,
                 'to'   => $to
@@ -79,7 +79,7 @@ class ReportController extends Controller
         $logs = $this->getLogs($from, $to);
         $data = $this->buildAttendance($logs);
 
-        return view('reports.daily', [
+        return view('hr.daily', [
             'data' => array_values($data),
             'from' => $from,
             'to'   => $to
@@ -92,7 +92,7 @@ class ReportController extends Controller
         $to   = $request->to;
 
         if (!$from || !$to) {
-            return view('reports.no_time_out', [
+            return view('hr.no_time_out', [
                 'data' => [],
                 'from' => null,
                 'to'   => null
@@ -104,7 +104,7 @@ class ReportController extends Controller
 
         $filtered = array_filter($data, fn($row) => empty($row['time_out']));
 
-        return view('reports.no_time_out', [
+        return view('hr.no_time_out', [
             'data' => array_values($filtered),
             'from' => $from,
             'to'   => $to
@@ -117,7 +117,7 @@ class ReportController extends Controller
         $to   = $request->to;
 
         if (!$from || !$to) {
-            return view('reports.no_time_in', [
+            return view('hr.no_time_in', [
                 'data' => [],
                 'from' => null,
                 'to'   => null
@@ -129,7 +129,7 @@ class ReportController extends Controller
 
         $filtered = array_filter($data, fn($row) => empty($row['time_in']));
 
-        return view('reports.no_time_in', [
+        return view('hr.no_time_in', [
             'data' => array_values($filtered),
             'from' => $from,
             'to'   => $to
@@ -141,7 +141,7 @@ class ReportController extends Controller
         $to   = $request->to;
 
         if (!$from || !$to) {
-            return view('reports.late', [
+            return view('hr.late', [
                 'data' => [],
                 'from' => null,
                 'to'   => null
@@ -172,6 +172,6 @@ class ReportController extends Controller
             ")
         )->get();
 
-        return view('reports.late', compact('data', 'from', 'to'));
+        return view('hr.late', compact('data', 'from', 'to'));
     }
 }

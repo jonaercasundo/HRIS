@@ -43,7 +43,14 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect('/');
+
+            $user = Auth::user();
+
+            return match ($user->role) {
+                'admin' => redirect('/admin/dashboard'),
+                'hr' => redirect('/hr/dashboard'),
+                default => redirect('/employee/dashboard'),
+            };
         }
 
         return back()->withErrors([
@@ -56,7 +63,6 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
         return redirect('/login');
     }
 }

@@ -4,28 +4,89 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\UserController;
 
+/*
+|--------------------------------------------------------------------------
+| PUBLIC ROUTES (NO LOGIN REQUIRED)
+|--------------------------------------------------------------------------
+*/
 
-Route::middleware(['auth', 'role:hr'])->group(function () {
-    Route::get('/reports/daily', [ReportController::class, 'daily']);
-    Route::get('/reports/late', [ReportController::class, 'late']);
-    Route::get('/', function () {
-        return view('welcome');
-    });
-    Route::get('/reports/no-time-out', [ReportController::class, 'noTimeOut']);
-    Route::get('/reports/no-time-in', [ReportController::class, 'noTimeIn']);
-});
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
-Route::post('/logout', [AuthController::class, 'logout']);
 
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])
-    ->name('register.submit');
+Route::post('/register', [AuthController::class, 'register'])->name('register.submit');
+
 Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
-
     return redirect('/login');
 })->name('logout');
+
+/*
+|--------------------------------------------------------------------------
+| AUTHENTICATED ROUTES
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth')->group(function () {
+
+    /*
+    |-------------------------
+    | DASHBOARD REDIRECT
+    |-------------------------
+    */
+    Route::get('/dashboard', function () {
+        $role = auth()->user()->role;
+
+        return match ($role) {
+            'admin' => redirect('/admin/dashboard'),
+            'hr' => redirect('/hr/dashboard'),
+            default => redirect('/employee/dashboard'),
+        };
+    })->name('dashboard');
+
+    /*
+    |-------------------------
+    | HR ROUTES
+    |-------------------------
+    */
+    Route::middleware('role:hr')->group(function () {
+
+        Route::get('/hr/dashboard', function () {
+            return view('hr.dashboard');
+        });
+
+        Route::get('/reports/daily', [ReportController::class, 'daily']);
+        Route::get('/reports/late', [ReportController::class, 'late']);
+        Route::get('/reports/no-time-out', [ReportController::class, 'noTimeOut']);
+        Route::get('/reports/no-time-in', [ReportController::class, 'noTimeIn']);
+    });
+
+    /*
+    |-------------------------
+    | ADMIN ROUTES
+    |-------------------------
+    */
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/dashboard', function () {
+            return view('users.index');
+        });
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+        Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::post('/users/{id}/update', [UserController::class, 'update'])->name('users.update');
+        Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
+    /*
+    |-------------------------
+    | EMPLOYEE ROUTES
+    |-------------------------
+    */
+    Route::middleware('role:employee')->group(function () {
+        Route::get('/employee/dashboard', function () {
+            return view('employee.dashboard');
+        });
+    });
+});
