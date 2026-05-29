@@ -3,11 +3,11 @@
 @section('content')
 <div class="container d-flex align-items-center py-5">
      <div class="row w-100 justify-content-center">
-        <div class="col-md-5 col-lg-4">
+        <div class="col-md-5 col-lg-6">
             <!-- Card Container -->
             <div class="card shadow-xl border-0 rounded-4 overflow-hidden">
                 <!-- Modern Header -->
-                <div class="card-header border-0 text-center text-white py-5 position-relative overflow-hidden"
+                <div class="card-header border-0 text-center text-white py-3 position-relative overflow-hidden"
                     style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">
                     <!-- Background Circle Decoration -->
                     <div style="
@@ -84,7 +84,7 @@
                                 Email Address
                             </label>
 
-                            <div class="input-group input-group-lg shadow-sm">
+                            <div class="input-group input-group-sm shadow-sm">
 
                                 <span class="input-group-text bg-white border-end-0 px-3">
                                     <i class="bi bi-envelope-fill text-primary"></i>
@@ -129,7 +129,7 @@
 
                             </div>
 
-                            <div class="input-group input-group-lg shadow-sm">
+                            <div class="input-group input-group-sm shadow-sm">
 
                                 <span class="input-group-text bg-white border-end-0 px-3">
                                     <i class="bi bi-lock-fill text-primary"></i>
