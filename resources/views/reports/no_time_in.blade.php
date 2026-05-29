@@ -48,6 +48,8 @@
             <th>Employee No</th>
             <th>Employee Name</th>
             <th>Date</th>
+            <th>Time In</th>
+            <th>Time Out</th>
             <th>Status</th>
         </tr>
     </thead>
@@ -58,6 +60,8 @@
                 <td>{{ $row['employeeNo'] ?? '-' }}</td>
                 <td>{{ $row['employeeName'] ?? 'N/A' }}</td>
                 <td>{{ $row['date_log'] ?? '-' }}</td>
+                <td>{{ $row['time_in'] ?? '-' }}</td>
+                <td>{{ $row['time_out'] ?? '-' }}</td>
                 <td><span class="text-danger">NO TIME IN</span></td>
             </tr>
         @empty
