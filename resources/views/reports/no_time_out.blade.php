@@ -61,6 +61,7 @@
                 <td>{{ $row['employeeName'] ?? 'N/A' }}</td>
                 <td>{{ $row['date_log'] ?? '-' }}</td>
                 <td>{{ $row['time_in'] ?? '-' }}</td>
+                <td>{{ $row['time_out'] ?? '-' }}</td>
                 <td><span class="text-danger">NO TIME OUT</span></td>
             </tr>
         @empty
