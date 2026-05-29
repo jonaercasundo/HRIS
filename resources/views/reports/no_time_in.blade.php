@@ -1,11 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>No Time In Report</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-</head>
+@extends('layouts.app')
 
-<body class="p-4">
+@section('title', 'No Time In Report')
+
+@section('content')
 
 <h3>No Time In Employees</h3>
 
@@ -14,20 +11,16 @@
     <a href="/reports/no-time-in" class="btn btn-primary">No Time In</a>
 </div>
 
-<form method="GET" action="" class="mb-3">
+<form method="GET" class="mb-3">
     <div class="row">
 
         <div class="col-md-3">
-            <input type="date"
-                   name="from"
-                   class="form-control"
+            <input type="date" name="from" class="form-control"
                    value="{{ request('from', date('Y-m-d')) }}">
         </div>
 
         <div class="col-md-3">
-            <input type="date"
-                   name="to"
-                   class="form-control"
+            <input type="date" name="to" class="form-control"
                    value="{{ request('to', date('Y-m-d')) }}">
         </div>
 
@@ -72,5 +65,4 @@
     </tbody>
 </table>
 
-</body>
-</html>
+@endsection

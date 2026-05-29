@@ -7,10 +7,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+use App\Models\Department;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+
+     /**
+     * Get the department that the user belongs to.
+     */
+
 
     /**
      * The attributes that are mass assignable.
@@ -21,6 +28,10 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'department_id',
+        'employee_id',
+        'position',
+        'status',
     ];
 
     /**
@@ -41,4 +52,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 }
