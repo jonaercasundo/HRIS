@@ -71,9 +71,13 @@ Route::middleware('auth')->group(function () {
     |-------------------------
     */
     Route::middleware('role:admin')->group(function () {
+
+        // Admin dashboard (CORRECT)
         Route::get('/admin/dashboard', function () {
-            return view('users.index');
+            return view('admin.dashboard');
         });
+
+        // User management
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::get('/users/{id}/edit', [UserController::class, 'edit'])->name('users.edit');
         Route::post('/users/{id}/update', [UserController::class, 'update'])->name('users.update');
