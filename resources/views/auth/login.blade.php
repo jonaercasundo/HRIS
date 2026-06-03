@@ -1,5 +1,5 @@
-@extends('layouts.app')
-
+@extends('layouts.app1')
+    
 @section('content')
 <div class="container d-flex align-items-center py-5">
      <div class="row w-100 justify-content-center">
