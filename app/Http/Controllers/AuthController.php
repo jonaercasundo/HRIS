@@ -24,12 +24,17 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|confirmed',
+            'department_id' => 'nullable|integer',
+            'role' => 'nullable|string|max:50',
         ]);
 
         User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'department_id' => $request->department_id,
+            'role' => $request->role ?? 'employee',
+
         ]);
 
         return redirect('/login')->with('success', 'Registration successful.');

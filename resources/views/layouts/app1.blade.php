@@ -47,7 +47,6 @@
         }
 
 
-
         /* Ultra-Modern Blurred Sticky Header Navbar */
         .navbar-modern {
             background-color: var(--navbar-bg);
