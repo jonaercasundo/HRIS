@@ -9,7 +9,7 @@
             </div>
             <div>
                 <h5 class="text-white fw-bold mb-0">HRIS System</h5>
-                <small class="text-muted text-uppercase">Human Resource Platform</small>
+                <small class="text-white text-uppercase">HR Platform</small>
             </div>
         </div>
     </div>
