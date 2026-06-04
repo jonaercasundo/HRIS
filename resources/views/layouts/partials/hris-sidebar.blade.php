@@ -20,7 +20,7 @@
         <!-- MAIN -->
         <div class="menu-title">MAIN</div>
 
-        <a href="/admin/dashboard" class="sidebar-link {{ request()->is('admin/dashboard') ? 'active' : '' }}">
+        <a href="/hr/dashboard" class="sidebar-link {{ request()->is('admin/dashboard') ? 'active' : '' }}">
             <i class="bi bi-grid-fill"></i><span>Dashboard</span>
         </a>
 
