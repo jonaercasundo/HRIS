@@ -73,12 +73,15 @@
                             ? \Carbon\Carbon::parse($row['date_log'])->format('Y-m-d')
                             : '-';
 
-                        $timeIn = !empty($row['time_in'])
-                            ? \Carbon\Carbon::parse($row['time_in'])->format('g:i A')
+                        $timeInRaw = $row['time_in'] ?? null;
+                        $timeOutRaw = $row['time_out'] ?? null;
+
+                        $timeIn = !empty($timeInRaw)
+                            ? \Carbon\Carbon::parse($timeInRaw)->format('g:i A')
                             : null;
 
-                        $timeOut = !empty($row['time_out'])
-                            ? \Carbon\Carbon::parse($row['time_out'])->format('g:i A')
+                        $timeOut = !empty($timeOutRaw)
+                            ? \Carbon\Carbon::parse($timeOutRaw)->format('g:i A')
                             : null;
                     @endphp
 
@@ -121,23 +124,26 @@
 
                         {{-- STATUS --}}
                         <td class="pe-4 text-end">
+                                @if($timeInRaw && $timeOutRaw)
+                                    <span class="badge bg-primary rounded-pill px-3 py-1">
+                                        Complete
+                                    </span>
 
-                            @if(!empty($row['time_in']) && !empty($row['time_out']))
-                                <span class="badge bg-primary rounded-pill px-3 py-1">
-                                    Complete
-                                </span>
+                                @elseif($timeInRaw && !$timeOutRaw)
+                                    <span class="badge bg-warning text-dark rounded-pill px-3 py-1">
+                                        Active Shift
+                                    </span>
 
-                            @elseif(!empty($row['time_in']) && empty($row['time_out']))
-                                <span class="badge bg-warning text-dark rounded-pill px-3 py-1">
-                                    Active Shift
-                                </span>
+                                @elseif(!$timeInRaw && !$timeOutRaw)
+                                    <span class="badge bg-secondary rounded-pill px-3 py-1">
+                                        No Logs
+                                    </span>
 
-                            @else
-                                <span class="badge bg-secondary rounded-pill px-3 py-1">
-                                    No Logs
-                                </span>
-                            @endif
-
+                                @else
+                                    <span class="badge bg-dark rounded-pill px-3 py-1">
+                                        Incomplete Data
+                                    </span>
+                                @endif
                         </td>
 
                     </tr>

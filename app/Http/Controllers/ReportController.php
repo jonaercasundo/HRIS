@@ -35,11 +35,16 @@ class ReportController extends Controller
 
         foreach ($logs as $log) {
 
-            $key = $log->employee_no . '_' . $log->date_log;
+            // SAFE CHECK (prevents ghost rows)
+            if (!$log->employee_no || !$log->date_log) {
+                continue;
+            }
+
+            $key = trim($log->employee_no) . '_' . $log->date_log;
 
             if (!isset($data[$key])) {
                 $data[$key] = [
-                    'employeeNo'   => $log->employee_no,
+                    'employeeNo'   => trim($log->employee_no),
                     'employeeName' => $log->employeeName ?? 'N/A',
                     'date_log'     => $log->date_log,
                     'time_in'      => null,
@@ -50,14 +55,12 @@ class ReportController extends Controller
             $tag = strtoupper(trim($log->tag ?? ''));
 
             if ($tag === 'IN') {
-                // keep earliest IN
                 if (!$data[$key]['time_in']) {
                     $data[$key]['time_in'] = $log->time_log;
                 }
             }
 
             if ($tag === 'OUT') {
-                // keep latest OUT
                 $data[$key]['time_out'] = $log->time_log;
             }
         }
