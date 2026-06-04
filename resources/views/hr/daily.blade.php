@@ -23,33 +23,22 @@
 
             <div class="d-flex flex-column flex-md-row gap-2 align-items-md-center">
 
-                {{-- FROM --}}
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-light">
                         <i class="bi bi-calendar-event"></i>
                     </span>
-
-                    <input type="date"
-                        name="from"
-                        value="{{ $from }}"
-                        class="form-control">
+                    <input type="date" name="from" value="{{ $from }}" class="form-control">
                 </div>
 
                 <span class="text-muted small">to</span>
 
-                {{-- TO --}}
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-light">
                         <i class="bi bi-calendar-event-fill"></i>
                     </span>
-
-                    <input type="date"
-                        name="to"
-                        value="{{ $to ?? $from }}"
-                        class="form-control">
+                    <input type="date" name="to" value="{{ $to ?? $from }}" class="form-control">
                 </div>
 
-                {{-- BUTTON --}}
                 <button type="submit" class="btn btn-primary btn-sm px-3 fw-semibold">
                     Filter
                 </button>
@@ -80,26 +69,28 @@
                 @forelse($data as $row)
 
                     @php
-                        $date = $row['biometricsDate'] ?? null
-                            ? \Carbon\Carbon::parse($row['biometricsDate'])->format('Y-m-d')
+                        $date = !empty($row['date_log'])
+                            ? \Carbon\Carbon::parse($row['date_log'])->format('Y-m-d')
                             : '-';
 
-                        $timeIn = $row['biometricsTimeIn'] ?? null
-                            ? \Carbon\Carbon::parse($row['biometricsTimeIn'])->format('g:i A')
+                        $timeIn = !empty($row['time_in'])
+                            ? \Carbon\Carbon::parse($row['time_in'])->format('g:i A')
                             : null;
 
-                        $timeOut = $row['biometricsTimeOut'] ?? null
-                            ? \Carbon\Carbon::parse($row['biometricsTimeOut'])->format('g:i A')
+                        $timeOut = !empty($row['time_out'])
+                            ? \Carbon\Carbon::parse($row['time_out'])->format('g:i A')
                             : null;
                     @endphp
 
                     <tr>
 
+                        {{-- EMPLOYEE --}}
                         <td class="ps-4 fw-semibold text-dark">
                             <i class="bi bi-person text-muted me-1"></i>
                             {{ $row['employeeNo'] ?? '-' }}
                         </td>
 
+                        {{-- DATE --}}
                         <td class="text-muted small">
                             {{ $date }}
                         </td>
@@ -130,6 +121,7 @@
 
                         {{-- STATUS --}}
                         <td class="pe-4 text-end">
+
                             @if(!empty($row['time_in']) && !empty($row['time_out']))
                                 <span class="badge bg-primary rounded-pill px-3 py-1">
                                     Complete
@@ -154,14 +146,9 @@
 
                     <tr>
                         <td colspan="5" class="text-center py-5 text-muted">
-
                             <i class="bi bi-folder-x fs-1 d-block mb-2 opacity-50"></i>
-
                             <div class="fw-semibold">No attendance records found</div>
-                            <small class="text-muted">
-                                Try selecting another date range.
-                            </small>
-
+                            <small class="text-muted">Try selecting another date range.</small>
                         </td>
                     </tr>
 
@@ -175,7 +162,6 @@
 
 </div>
 
-{{-- STYLE FIX --}}
 <style>
     .table > :not(caption) > * > * {
         padding-top: 0.75rem;
