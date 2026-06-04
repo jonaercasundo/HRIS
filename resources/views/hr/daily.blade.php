@@ -130,13 +130,12 @@
 
                         {{-- STATUS --}}
                         <td class="pe-4 text-end">
-
-                            @if($row['time_in'] && $row['biometricsTimeOut'])
+                            @if(!empty($row['time_in']) && !empty($row['time_out']))
                                 <span class="badge bg-primary rounded-pill px-3 py-1">
                                     Complete
                                 </span>
 
-                            @elseif($row['time_in'] && !$row['biometricsTimeOut'])
+                            @elseif(!empty($row['time_in']) && empty($row['time_out']))
                                 <span class="badge bg-warning text-dark rounded-pill px-3 py-1">
                                     Active Shift
                                 </span>
