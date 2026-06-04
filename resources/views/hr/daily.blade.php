@@ -57,6 +57,7 @@
             <thead class="table-light text-uppercase small">
                 <tr>
                     <th class="ps-4">Employee ID</th>
+                    <th class="ps-4">Employee Name</th>
                     <th>Log Date</th>
                     <th>Time In</th>
                     <th>Time Out</th>
@@ -91,6 +92,10 @@
                         <td class="ps-4 fw-semibold text-dark">
                             <i class="bi bi-person text-muted me-1"></i>
                             {{ $row['employeeNo'] ?? '-' }}
+                        </td>
+                        <td class="ps-4 fw-semibold text-dark">
+                            <i class="bi bi-person text-muted me-1"></i>
+                            {{ $row['employeeName'] ?? '-' }}
                         </td>
 
                         {{-- DATE --}}
@@ -127,11 +132,6 @@
                                 @if($timeInRaw && $timeOutRaw)
                                     <span class="badge bg-primary rounded-pill px-3 py-1">
                                         Complete
-                                    </span>
-
-                                @elseif($timeInRaw && !$timeOutRaw)
-                                    <span class="badge bg-warning text-dark rounded-pill px-3 py-1">
-                                        Active Shift
                                     </span>
 
                                 @elseif(!$timeInRaw && !$timeOutRaw)
