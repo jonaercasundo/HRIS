@@ -94,22 +94,36 @@ class ReportController extends Controller
     {
         $from = $request->from;
         $to   = $request->to;
+        $search = $request->search;
 
         if (!$from || !$to) {
             return view('hr.daily', [
                 'data' => [],
                 'from' => $from,
-                'to'   => $to
+                'to'   => $to,
+                'search' => $search
             ]);
         }
 
         $logs = $this->getLogs($from, $to);
+
+        // ✅ SEARCH FILTER (employee ID or name)
+        if ($search) {
+            $searchLower = strtolower($search);
+
+            $logs = $logs->filter(function ($log) use ($searchLower) {
+                return str_contains(strtolower($log->employee_no), $searchLower)
+                    || str_contains(strtolower($log->employeeName ?? ''), $searchLower);
+            });
+        }
+
         $data = $this->buildAttendance($logs);
 
         return view('hr.daily', [
             'data' => array_values($data),
             'from' => $from,
-            'to'   => $to
+            'to'   => $to,
+            'search' => $search
         ]);
     }
 

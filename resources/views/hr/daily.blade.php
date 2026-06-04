@@ -22,31 +22,46 @@
             </div>
         </div>
 
-        {{-- FILTER FORM --}}
-        <form method="GET" class="m-0 w-100 w-md-auto">
+        <form method="GET" class="m-0 w-100">
+
             <div class="d-flex flex-column flex-sm-row gap-3 align-items-sm-center backend-filter-wrapper">
 
+                {{-- SEARCH --}}
+                <div class="input-group">
+                    <span class="input-group-text bg-body-tertiary border-end-0 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text"
+                        name="search"
+                        value="{{ request('search') }}"
+                        class="form-control ps-1"
+                        placeholder="Search Employee ID or Name">
+                </div>
+
+                {{-- FROM --}}
                 <div class="input-group">
                     <span class="input-group-text bg-body-tertiary border-end-0 text-muted">
                         <i class="bi bi-calendar-event"></i>
                     </span>
-                    <input type="date" name="from" value="{{ $from }}" class="form-control ps-1" aria-label="From Date">
+                    <input type="date" name="from" value="{{ $from }}" class="form-control ps-1">
                 </div>
 
-                <div class="text-muted small fw-medium text-center px-1">to</div>
-
+                {{-- TO --}}
                 <div class="input-group">
                     <span class="input-group-text bg-body-tertiary border-end-0 text-muted">
                         <i class="bi bi-calendar-event-fill"></i>
                     </span>
-                    <input type="date" name="to" value="{{ $to ?? $from }}" class="form-control ps-1" aria-label="To Date">
+                    <input type="date" name="to" value="{{ $to ?? $from }}" class="form-control ps-1">
                 </div>
 
-                <button type="submit" class="btn btn-primary px-4 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                {{-- BUTTON --}}
+                <button type="submit"
+                    class="btn btn-primary px-4 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm">
                     <i class="bi bi-funnel-fill small"></i> Filter
                 </button>
 
             </div>
+
         </form>
 
     </div>
