@@ -80,16 +80,16 @@
                 @forelse($data as $row)
 
                     @php
-                        $date = $row->biometricsDate
-                            ? \Carbon\Carbon::parse($row->biometricsDate)->format('Y-m-d')
+                        $date = $row['biometricsDate'] ?? null
+                            ? \Carbon\Carbon::parse($row['biometricsDate'])->format('Y-m-d')
                             : '-';
 
-                        $timeIn = $row->biometricsTimeIn
-                            ? \Carbon\Carbon::parse($row->biometricsTimeIn)->format('g:i A')
+                        $timeIn = $row['biometricsTimeIn'] ?? null
+                            ? \Carbon\Carbon::parse($row['biometricsTimeIn'])->format('g:i A')
                             : null;
 
-                        $timeOut = $row->biometricsTimeOut
-                            ? \Carbon\Carbon::parse($row->biometricsTimeOut)->format('g:i A')
+                        $timeOut = $row['biometricsTimeOut'] ?? null
+                            ? \Carbon\Carbon::parse($row['biometricsTimeOut'])->format('g:i A')
                             : null;
                     @endphp
 
@@ -97,7 +97,7 @@
 
                         <td class="ps-4 fw-semibold text-dark">
                             <i class="bi bi-person text-muted me-1"></i>
-                            {{ $row->employeeNo ?? '-' }}
+                            {{ $row['employeeNo'] ?? '-' }}
                         </td>
 
                         <td class="text-muted small">
