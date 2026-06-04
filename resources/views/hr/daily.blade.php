@@ -61,7 +61,6 @@
                     <th class="text-muted fw-bold">Log Date</th>
                     <th class="text-muted fw-bold">Time In</th>
                     <th class="text-muted fw-bold">Time Out</th>
-                    <th class="pe-4 text-end text-muted fw-bold">Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -125,23 +124,6 @@
                                 </span>
                             @else
                                 <span class="text-muted opacity-50">—</span>
-                            @endif
-                        </td>
-
-                        {{-- STATUS --}}
-                        <td class="pe-4 text-end">
-                            @if($timeInRaw && $timeOutRaw)
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1.5 fw-semibold">
-                                    Complete
-                                </span>
-                            @elseif(!$timeInRaw && !$timeOutRaw)
-                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1.5 fw-semibold">
-                                    No Logs
-                                </span>
-                            @else
-                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3 py-1.5 fw-semibold">
-                                    Incomplete Data
-                                </span>
                             @endif
                         </td>
                     </tr>
