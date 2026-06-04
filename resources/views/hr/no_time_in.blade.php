@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app_hr')
 
 @section('title', 'No Time In Report')
 
