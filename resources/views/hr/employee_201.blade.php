@@ -89,7 +89,6 @@
         background-color: #f8fafc;
     }
 
-    /* Ultra compact micro control row buttons */
     .btn-micro-action {
         padding: 5px 12px !important;
         font-size: 0.75rem !important;
@@ -101,7 +100,6 @@
         transition: all 0.15s ease;
     }
 
-    /* Custom Toast Notification Placement */
     .toast-container-custom {
         position: fixed;
         top: 24px;
@@ -124,14 +122,21 @@
 
     <div class="card card-modern mb-4">
         <div class="card-body p-3">
-            <div class="row g-3">
-                <div class="col-12 col-md-4">
-                    <div class="input-group">
-                        <span class="input-group-text input-icon-span px-2.5 py-0"><i class="bi bi-search" style="font-size: 0.8rem;"></i></span>
-                        <input type="text" id="employeeSearch" class="form-control form-input-modern" placeholder="Search system profiles...">
+            <form method="GET" action="{{ url()->current() }}" id="searchForm">
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text input-icon-span px-2.5 py-0"><i class="bi bi-search" style="font-size: 0.8rem;"></i></span>
+                            <input type="text" name="search" id="employeeSearch" class="form-control form-input-modern" placeholder="Search system profiles..." value="{{ request('search') }}">
+                        </div>
                     </div>
+                    @if(request('search'))
+                        <div class="col-12 col-md-2 d-flex align-items-center">
+                            <a href="{{ url()->current() }}" class="btn btn-link btn-sm text-decoration-none text-muted p-0"><i class="bi bi-x-circle-fill"></i> Clear Filter</a>
+                        </div>
+                    @endif
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 
@@ -178,7 +183,7 @@
                                             <i class="bi bi-people text-slate-400" style="color: #94a3b8; font-size: 1.5rem;"></i>
                                         </div>
                                         <p class="mb-1 fw-semibold text-slate-800" style="color: #1e293b; font-size: 0.9rem;">No Identity Records Compiled</p>
-                                        <small class="text-muted d-block" style="font-size: 0.775rem;">Add workers onto your server ecosystem database infrastructure to populate registry logs.</small>
+                                        <small class="text-muted d-block" style="font-size: 0.775rem;">No matching workers were discovered within your database scope configuration.</small>
                                     </div>
                                 </td>
                             </tr>
@@ -190,7 +195,7 @@
         
         @if($employees->hasPages())
             <div class="card-footer bg-white border-top border-slate-100 px-4 py-3 d-flex justify-content-center">
-                {{ $employees->links() }}
+                {{ $employees->appends(request()->query())->links() }}
             </div>
         @endif
     </div>
@@ -199,9 +204,8 @@
 <div class="toast-container-custom">
     <div id="feedbackToast" class="toast align-items-center text-white border-0 shadow-lg rounded-3" role="alert" aria-live="assertive" aria-atomic="true">
         <div class="d-flex p-2.5">
-            <div class="toast-body d-flex align-items-center gap-2 fw-medium" style="font-size: 0.815rem;" id="toastMessage">
-                </div>
-            <button type="button" class="btn-close btn-close-white m-auto me-2 shadow-none" style="font-size: 0.7rem;" data-bs-dismiss="none" onclick="hideToast()"></button>
+            <div class="toast-body d-flex align-items-center gap-2 fw-medium" style="font-size: 0.815rem;" id="toastMessage"></div>
+            <button type="button" class="btn-close btn-close-white m-auto me-2 shadow-none" style="font-size: 0.7rem;" onclick="hideToast()"></button>
         </div>
     </div>
 </div>
@@ -218,10 +222,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const toastMessage = document.getElementById('toastMessage');
         
         if(type === 'success') {
-            toastElement.style.backgroundColor = '#10b981'; // Modern green
+            toastElement.style.backgroundColor = '#10b981';
             toastMessage.innerHTML = `<i class="bi bi-check-circle-fill"></i> ${message}`;
         } else {
-            toastElement.style.backgroundColor = '#ef4444'; // Modern red
+            toastElement.style.backgroundColor = '#ef4444';
             toastMessage.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i> ${message}`;
         }
         
@@ -234,25 +238,22 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // --- RE-ARCHITECTED EVENT LISTENER DELEGATION ---
-    // Using root element capturing to prevent execution dropout over dynamic pagination updates
     document.getElementById('employeeTable').addEventListener('click', function(e) {
         let btn = e.target.closest('.btn-save');
         if (!btn || btn.disabled) return;
 
-        let empNo = btn.getAttribute('data-id') || btn.dataset.emp;
+        let empNo = btn.dataset.emp;
         let emailInput = document.querySelector(`.email-input[data-emp="${empNo}"]`);
         
         if (!emailInput) return;
         let emailValue = emailInput.value.trim();
 
-        // Base Client Validation Checklist
         if(emailValue !== "" && !emailInput.checkValidity()) {
             showNotification('Invalid structure configuration applied to target email identity format.', 'error');
             emailInput.focus();
             return;
         }
 
-        // Mutation UI Locking Transitions
         btn.disabled = true;
         const fallbackText = btn.innerHTML;
         btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
@@ -280,22 +281,18 @@ document.addEventListener('DOMContentLoaded', function() {
             showNotification(err.message || 'Fatal exception detected compiling directory state.', 'error');
         })
         .finally(() => {
-            // Restore UI Interaction Capabilities
             btn.disabled = false;
             btn.innerHTML = fallbackText;
         });
     });
 
-    // --- MINIMAL RUNTIME FRONTEND DIRECTORY SEARCH FILTER ---
-    document.getElementById('employeeSearch').addEventListener('input', function(e) {
-        let keyword = e.target.value.toLowerCase().trim();
-        let rows = document.querySelectorAll('#employeeTable tbody tr');
-
-        rows.forEach(row => {
-            if (row.querySelector('td[colspan]')) return; // Ignore standard empty fallback components
-            let text = row.textContent.toLowerCase();
-            row.style.display = text.includes(keyword) ? '' : 'none';
-        });
+    // --- DEBOUNCED SEARCH EXECUTION ---
+    let searchTimeout;
+    document.getElementById('employeeSearch').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            document.getElementById('searchForm').submit();
+        }, 500); // 500ms delay to allow typing without rapid page reloading
     });
 });
 </script>
