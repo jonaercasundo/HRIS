@@ -70,7 +70,7 @@
             <h5 class="mb-0 fw-bold text-dark tracking-tight">Biometric DTR</h5>
             <small class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-cpu-fill me-1"></i>BIO-1 Stream</small>
         </div>
-        <button id="syncBtn" class="btn btn-compact-primary rounded-2 shadow-sm d-flex align-items-center gap-1.5">
+        <button id="syncBtn" class="d-none btn btn-compact-primary rounded-2 shadow-sm d-flex align-items-center gap-1.5">
             <span id="syncText" class="d-flex align-items-center gap-1">
                 <i class="bi bi-arrow-repeat"></i> Sync Logs
             </span>

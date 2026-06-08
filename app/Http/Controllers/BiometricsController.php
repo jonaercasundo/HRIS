@@ -10,7 +10,7 @@ class BiometricsController extends Controller
     {
         try {
             require_once app_path('Services/ZKTeco/zklib.php');
-            /** @var \ZKLib $zk */
+
             $zk = new \ZKLib(
                 config('biometric.bio_ip_1'),
                 config('biometric.bio_port_1')
@@ -20,15 +20,32 @@ class BiometricsController extends Controller
             $zk->disableDevice();
 
             $attendance = $zk->getAttendance();
-
-            // ✅ preload employees (performance boost)
+            if (!is_iterable($attendance)) {
+                $attendance = [];
+            }
             $employees = Biometric::pluck('employeeNo', 'accessNo');
+
+            $nowLimit = now()->subDays(210)->format('Y-m-d');
 
             foreach ($attendance as $at) {
 
                 $dateLog = date('Y-m-d', strtotime($at[3]));
 
-                if (strtotime($dateLog) < strtotime(now()->subDays(210))) {
+                if ($dateLog < $nowLimit) {
+                    continue;
+                }
+
+                $timeLog = date('H:i', strtotime($at[3]));
+
+                // check FIRST if already exists
+                $exists = BiometricTemp::where('uid', $at[0])
+                    ->where('date_log', $dateLog)
+                    ->where('time_log', $timeLog)
+                    ->where('bio_name', 'BIO-1')
+                    ->exists();
+
+                // ❗ skip if already synced
+                if ($exists) {
                     continue;
                 }
 
@@ -40,28 +57,23 @@ class BiometricsController extends Controller
 
                 $employeeNo = $employees[$at[0]] ?? null;
 
-                BiometricTemp::updateOrCreate(
-                    [
-                        'uid'      => $at[0],
-                        'date_log' => $dateLog,
-                        'time_log' => date('H:i', strtotime($at[3])),
-                        'bio_name' => 'BIO-1'
-                    ],
-                    [
-                        'employee_no' => $employeeNo,
-                        'state'       => $at[2],
-                        'tag'         => $tag,
-                    ]
-                );
+                BiometricTemp::create([
+                    'uid'         => $at[0],
+                    'employee_no' => $employeeNo,
+                    'date_log'    => $dateLog,
+                    'time_log'    => $timeLog,
+                    'state'       => $at[2],
+                    'tag'         => $tag,
+                    'bio_name'    => 'BIO-1',
+                ]);
             }
 
-            // ✅ safely turn device back on
             $zk->enableDevice();
             $zk->disconnect();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Attendance downloaded successfully.'
+                'message' => 'Attendance synced successfully (no duplicates).'
             ]);
 
         } catch (\Exception $e) {
