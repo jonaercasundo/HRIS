@@ -10,7 +10,7 @@ use App\Models\BiometricTemp;
 use Barryvdh\DomPDF\Facade\Pdf;
 class ReportController extends Controller
 {
-    private const GRACE_MINUTES = 30;
+    private const GRACE_MINUTES = 15;
     private const NTE_THRESHOLD_SECONDS = 14400; // 4 hours
     public function generateNTE(Request $request, $employeeNo)
     {
