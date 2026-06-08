@@ -1,13 +1,14 @@
 <div class="h-100 d-flex flex-column p-3 hris-sidebar">
 
-    <div class="sidebar-header mb-3">
-        <div class="d-flex align-items-center gap-2.5">
-            <div class="logo-box">
-                <i class="bi bi-person-badge-fill text-white"></i>
+    <div class="sidebar-header mb-3 pb-2 border-bottom border-light">
+        <div class="d-flex align-items-center gap-2">
+            <div class="logo-box d-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);">
+                <i class="bi bi-person-badge-fill text-white" style="font-size: 1rem;"></i>
             </div>
-            <div>
-                <h6 class="text-dark fw-bold mb-0 tracking-tight">HRIS System</h6>
-                <span class="text-muted text-uppercase font-bold" style="font-size: 0.6rem; letter-spacing: 0.05em;">HR Platform</span>
+            
+            <div class="ms-1">
+                <h6 class="text-dark fw-bold mb-0 tracking-tight" style="font-size: 0.85rem; line-height: 1.2;">HRIS System</h6>
+                <span class="text-muted text-uppercase fw-bold d-block" style="font-size: 0.6rem; letter-spacing: 0.05em; line-height: 1;">HR Platform</span>
             </div>
         </div>
     </div>
