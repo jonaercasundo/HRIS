@@ -41,25 +41,33 @@ class Employee201Controller extends Controller
     /**
      * Commit or truncate individual verification email parameters.
      */
-    public function saveEmail(Request $request)
-    {
+public function saveEmail(Request $request)
+{
+    try {
+
         $request->validate([
             'employee_no' => 'required|string',
             'email'       => 'required|email|max:255'
         ]);
 
-        DB::table('employee_emails')->updateOrInsert(
-            ['employee_no' => $request->employee_no], // check condition
-            [
-                'email' => trim($request->email),
-                'updated_at' => now(),
-                'created_at' => now() // only used if inserting new
-            ]
+        EmployeeEmail::updateOrCreate(
+            ['employee_no' => $request->employee_no],
+            ['email' => trim($request->email)]
         );
 
         return response()->json([
             'success' => true,
-            'message' => 'Email saved successfully (inserted or updated).'
+            'message' => 'Email saved successfully.'
         ]);
+
+    } catch (\Exception $e) {
+
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ], 500);
     }
+}
 }
