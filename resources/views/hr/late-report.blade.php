@@ -139,6 +139,7 @@
                             <th>Grace Period</th>
                             <th>Total Late Calculation (HH:MM:SS)</th>
                             <th>Late Frequency</th>
+                            <th>Half Day Count</th>
                             <th class="pe-3 text-end">Actions</th>
                         </tr>
                     </thead>
@@ -146,10 +147,10 @@
                     <tbody class="border-top-0">
                         @forelse($summary ?? [] as $row)
                             <tr>
-                                <td class="ps-3 fw-semibold text-dark">{{ $row['employeeNo'] }}</td>
+                                <td class="ps-3 fw-semibold text-dark font-monospace" style="font-size: 0.75rem;">{{ $row['employeeNo'] }}</td>
                                 <td class="text-dark fw-medium">{{ $row['employeeName'] }}</td>
                                 <td>
-                                    <span class="badge bg-light text-secondary border px-1.5 py-0.5 rounded-1 text-xs">
+                                    <span class="badge bg-light text-secondary border px-1.5 py-0.5 rounded-1 text-xs fw-normal">
                                         {{ $row['gracePeriod'] }} mins
                                     </span>
                                 </td>
@@ -167,8 +168,13 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-light text-secondary border px-1.5 py-0.5 rounded-1 text-xs">
+                                    <span class="badge bg-light text-secondary border px-1.5 py-0.5 rounded-1 text-xs fw-normal">
                                         {{ $row['late_count'] }} counts
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border px-1.5 py-0.5 rounded-1 text-xs fw-semibold">
+                                        {{ $row['halfday_count'] }} half-days
                                     </span>
                                 </td>
                                 <td class="pe-3 text-end">
@@ -185,7 +191,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-muted bg-light border-0">
+                                <td colspan="7" class="text-center py-5 text-muted bg-light border-0">
                                     <div class="py-3">
                                         <i class="bi bi-clipboard-x fs-3 text-muted mb-1 d-block"></i>
                                         <p class="mb-0 fw-medium small">No punctual discrepancies tracked within this timeframe</p>

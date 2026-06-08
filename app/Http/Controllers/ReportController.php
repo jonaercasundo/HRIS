@@ -288,6 +288,20 @@ class ReportController extends Controller
 
         return true;
     }
+    private function calculateLateSecondsDynamic($timeIn, $graceMinutes)
+    {
+        if (!$timeIn) return 0;
+
+        $start = strtotime('08:00:00');
+        $grace = $start + ($graceMinutes * 60);
+        $in = strtotime($timeIn);
+
+        if ($in <= $grace) {
+            return 0;
+        }
+
+        return $in - $grace;
+    }
     private function buildLateSummary($logs)
     {
         $summary = [];
@@ -302,31 +316,49 @@ class ReportController extends Controller
                 continue;
             }
 
-            // 🚫 SKIP WEEKENDS + HOLIDAYS
+            // 🚫 skip weekends + holidays
             if (!$this->isWorkingDay($log->date_log)) {
-                continue;
-            }
-
-            $lateSeconds = $this->calculateLateSeconds($log->time_log);
-
-            if ($lateSeconds <= 0) {
                 continue;
             }
 
             $key = trim($log->employee_no);
 
+            // 👉 detect schedule type (FULL / HALF)
+            $scheduleType = $log->schedule_type ?? 'FULL';
+
+            // ⏱️ adjust grace period
+            $graceMinutes = ($scheduleType === 'HALF') ? 90 : self::GRACE_MINUTES;
+
+            $lateSeconds = $this->calculateLateSecondsDynamic(
+                $log->time_log,
+                $graceMinutes
+            );
+
+            // initialize
             if (!isset($summary[$key])) {
                 $summary[$key] = [
-                    'employeeNo'    => $key,
-                    'employeeName'  => $log->employeeName ?? 'N/A',
-                    'gracePeriod'   => self::GRACE_MINUTES,
-                    'late_seconds'  => 0,
-                    'late_count'    => 0,
+                    'employeeNo'     => $key,
+                    'employeeName'   => $log->employeeName ?? 'N/A',
+                    'late_seconds'   => 0,
+                    'late_count'     => 0,
+                    'halfday_count'  => 0,
+                    'gracePeriod'    => self::GRACE_MINUTES,
                 ];
             }
 
-            $summary[$key]['late_seconds'] += $lateSeconds;
-            $summary[$key]['late_count']++;
+            // 🟡 HALF DAY logic
+            if ($scheduleType === 'HALF') {
+
+                // half-day is NOT late
+                $summary[$key]['halfday_count']++;
+                continue;
+            }
+
+            // 🔴 LATE logic (FULL DAY only)
+            if ($lateSeconds > 0) {
+                $summary[$key]['late_seconds'] += $lateSeconds;
+                $summary[$key]['late_count']++;
+            }
         }
 
         foreach ($summary as $key => &$row) {
