@@ -8,7 +8,7 @@
     </div>
 
     {{-- FILTER --}}
-    <form method="GET" action="{{ url('/late-report') }}" class="row g-2 mb-4">
+    <form method="GET" action="{{ url('/report') }}" class="row g-2 mb-4">
 
         <div class="col-md-3">
             <input type="date" name="from" value="{{ $from ?? '' }}" class="form-control" required>
@@ -53,8 +53,14 @@
                             <td>{{ $row['employeeNo'] }}</td>
                             <td>{{ $row['employeeName'] }}</td>
                             <td>
+                                @php
+                                    $parts = explode(':', $row['late_hms']);
+                                @endphp
+
                                 <span class="badge bg-danger">
-                                    {{ $row['late_hms'] }}
+                                    {{ (int)$parts[0] }} Hours,
+                                    {{ (int)$parts[1] }} Minutes,
+                                    {{ (int)$parts[2] }} Seconds
                                 </span>
                             </td>
                         </tr>
