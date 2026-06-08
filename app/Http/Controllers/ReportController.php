@@ -8,22 +8,42 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 use App\Models\BiometricTemp;
 use Barryvdh\DomPDF\Facade\Pdf;
-
 class ReportController extends Controller
 {
     private const GRACE_MINUTES = 15;
-
-    // =========================
-    // HALF DAY CHECK
-    // =========================
-    private function isHalfDay($timeIn)
+    private const NTE_THRESHOLD_SECONDS = 14400; // 4 hours
+    private function isHalfDayByTime($timeIn)
     {
         return strtotime($timeIn) >= strtotime('12:00:00');
     }
+    public function generateNTE(Request $request, $employeeNo)
+    {
+        $logs = $this->getLogs($request->from, $request->to);
 
-    // =========================
-    // GET LOGS
-    // =========================
+        $summary = $this->buildLateSummary($logs);
+
+        if (!isset($summary[$employeeNo])) {
+            return abort(404, 'No late record found');
+        }
+
+        $employee = $summary[$employeeNo];
+
+        // ✅ FINAL RULE: 5 LATE OCCURRENCES ONLY
+        if ($employee['late_count'] < 5) {
+            return response()->json([
+                'success' => false,
+                'message' => 'NTE not required. Employee must have at least 5 late occurrences.'
+            ], 403);
+        }
+
+        $pdf = Pdf::loadView('hr.reports.nte', [
+            'employee' => $employee,
+            'from' => $request->from,
+            'to' => $request->to
+        ])->setPaper('A4');
+
+        return $pdf->download("NTE-{$employeeNo}.pdf");
+    }
     private function getLogs($from, $to)
     {
         return DB::table('zkteco_dtr_tag_temp as b')
@@ -44,15 +64,13 @@ class ReportController extends Controller
             ->get();
     }
 
-    // =========================
-    // ATTENDANCE BUILDER
-    // =========================
     private function buildAttendance($logs)
     {
         $data = [];
 
         foreach ($logs as $log) {
 
+            // SAFE CHECK (prevents ghost rows)
             if (!$log->employee_no || !$log->date_log) {
                 continue;
             }
@@ -71,8 +89,10 @@ class ReportController extends Controller
 
             $tag = strtoupper(trim($log->tag ?? ''));
 
-            if ($tag === 'IN' && !$data[$key]['time_in']) {
-                $data[$key]['time_in'] = $log->time_log;
+            if ($tag === 'IN') {
+                if (!$data[$key]['time_in']) {
+                    $data[$key]['time_in'] = $log->time_log;
+                }
             }
 
             if ($tag === 'OUT') {
@@ -82,161 +102,6 @@ class ReportController extends Controller
 
         return $data;
     }
-
-    // =========================
-    // LATE CALCULATION (FULL DAY)
-    // =========================
-    private function calculateLate($timeIn)
-    {
-        if (!$timeIn) return 0;
-
-        $start = strtotime('08:00:00');
-        $grace = $start + (self::GRACE_MINUTES * 60);
-        $in = strtotime($timeIn);
-
-        return ($in > $grace) ? ($in - $grace) : 0;
-    }
-
-    // =========================
-    // BUILD LATE SUMMARY (MAIN RULE ENGINE)
-    // =========================
-    private function buildLateSummary($logs)
-    {
-        $summary = [];
-
-        foreach ($logs as $log) {
-
-            if (!$log->employee_no || !$log->date_log || !$log->time_log) {
-                continue;
-            }
-
-            if (strtoupper($log->tag) !== 'IN') {
-                continue;
-            }
-
-            $key = trim($log->employee_no);
-            $timeIn = strtotime($log->time_log);
-
-            $isHalfDay = $this->isHalfDay($log->time_log);
-
-            $lateSeconds = 0;
-
-            // ======================
-            // FULL DAY RULE
-            // ======================
-            if (!$isHalfDay) {
-                $lateSeconds = $this->calculateLate($log->time_log);
-            }
-
-            // ======================
-            // HALF DAY RULE
-            // ======================
-            if ($isHalfDay) {
-
-                $halfStart = strtotime('12:00:00');
-                $graceEnd = strtotime('+90 minutes', $halfStart); // 13:30
-
-                if ($timeIn >= $graceEnd) {
-                    $lateMinutes = ceil(($timeIn - $graceEnd) / 60);
-                    $lateSeconds = $lateMinutes * 60;
-                }
-            }
-
-            // ======================
-            // INIT
-            // ======================
-            if (!isset($summary[$key])) {
-                $summary[$key] = [
-                    'employeeNo'   => $key,
-                    'employeeName' => $log->employeeName ?? 'N/A',
-                    'late_count'   => 0,
-                    'late_days'    => [],
-                    'halfday_count'=> 0,
-                ];
-            }
-
-            // halfday counter
-            if ($isHalfDay) {
-                $summary[$key]['halfday_count']++;
-            }
-
-            // ======================
-            // COUNT LATE OCCURRENCE
-            // ======================
-            if ($lateSeconds > 0) {
-
-                $summary[$key]['late_count']++;
-
-                // IMPORTANT: frequency = per DAY
-                $summary[$key]['late_days'][$log->date_log] = true;
-            }
-        }
-
-        // finalize
-        foreach ($summary as &$row) {
-            $row['late_days_count'] = count($row['late_days']);
-        }
-
-        return $summary;
-    }
-
-    // =========================
-    // NTE GENERATION (FINAL RULE)
-    // =========================
-    public function generateNTE(Request $request, $employeeNo)
-    {
-        $logs = $this->getLogs($request->from, $request->to);
-        $summary = $this->buildLateSummary($logs);
-
-        if (!isset($summary[$employeeNo])) {
-            return abort(404, 'No record found');
-        }
-
-        $employee = $summary[$employeeNo];
-
-        // ======================
-        // FINAL NTE RULE
-        // ======================
-        if ($employee['late_days_count'] < 5) {
-            return response()->json([
-                'success' => false,
-                'message' => 'NTE not required. Must have at least 5 late occurrences.'
-            ], 403);
-        }
-
-        $pdf = Pdf::loadView('hr.reports.nte', [
-            'employee' => $employee,
-            'from' => $request->from,
-            'to' => $request->to
-        ])->setPaper('A4');
-
-        return $pdf->download("NTE-{$employeeNo}.pdf");
-    }
-
-    // =========================
-    // LATE LIST VIEW
-    // =========================
-    public function late(Request $request)
-    {
-        if (!$request->from || !$request->to) {
-            return view('hr.late', ['data' => [], 'from' => null, 'to' => null]);
-        }
-
-        $logs = $this->getLogs($request->from, $request->to);
-        $summary = $this->buildLateSummary($logs);
-
-        $summary = array_filter($summary, fn($row) => $row['late_days_count'] > 0);
-
-        return view('hr.late', [
-            'data' => array_values($summary),
-            'from' => $request->from,
-            'to' => $request->to
-        ]);
-    }
-
-    // =========================
-    // EXPORT PDF / EXCEL (UNCHANGED)
-    // =========================
     public function exportExcel(Request $request)
     {
         $logs = $this->getLogs($request->from, $request->to);
@@ -247,7 +112,6 @@ class ReportController extends Controller
             'attendance.xlsx'
         );
     }
-
     public function exportPdf(Request $request)
     {
         $logs = $this->getLogs($request->from, $request->to);
@@ -261,7 +125,150 @@ class ReportController extends Controller
 
         return $pdf->download('attendance-report.pdf');
     }
+    public function daily(Request $request)
+    {
+        $from = $request->from;
+        $to   = $request->to;
+        $search = $request->search;
 
+        if (!$from || !$to) {
+            return view('hr.daily', [
+                'data' => [],
+                'from' => $from,
+                'to'   => $to,
+                'search' => $search
+            ]);
+        }
+
+        $logs = $this->getLogs($from, $to);
+
+        // ✅ SEARCH FILTER (employee ID or name)
+        if ($search) {
+            $searchLower = strtolower($search);
+
+            $logs = $logs->filter(function ($log) use ($searchLower) {
+                return str_contains(strtolower($log->employee_no), $searchLower)
+                    || str_contains(strtolower($log->employeeName ?? ''), $searchLower);
+            });
+        }
+
+        $data = $this->buildAttendance($logs);
+
+        return view('hr.daily', [
+            'data' => array_values($data),
+            'from' => $from,
+            'to'   => $to,
+            'search' => $search
+        ]);
+    }
+
+    public function noTimeOut(Request $request)
+    {
+        $from = $request->from;
+        $to   = $request->to;
+
+        if (!$from || !$to) {
+            return view('hr.no_time_out', [
+                'data' => [],
+                'from' => null,
+                'to'   => null
+            ]);
+        }
+
+        $logs = $this->getLogs($from, $to);
+        $data = $this->buildAttendance($logs);
+
+        $filtered = array_filter($data, fn($row) => empty($row['time_out']));
+
+        return view('hr.no_time_out', [
+            'data' => array_values($filtered),
+            'from' => $from,
+            'to'   => $to
+        ]);
+    }
+
+    public function noTimeIn(Request $request)
+    {
+        $from = $request->from;
+        $to   = $request->to;
+
+        if (!$from || !$to) {
+            return view('hr.no_time_in', [
+                'data' => [],
+                'from' => null,
+                'to'   => null
+            ]);
+        }
+
+        $logs = $this->getLogs($from, $to);
+        $data = $this->buildAttendance($logs);
+
+        $filtered = array_filter($data, fn($row) => empty($row['time_in']));
+
+        return view('hr.no_time_in', [
+            'data' => array_values($filtered),
+            'from' => $from,
+            'to'   => $to
+        ]);
+    }
+    public function late(Request $request)
+    {
+        if (!$request->from || !$request->to) {
+            return view('hr.late', [
+                'data' => [],
+                'from' => null,
+                'to' => null
+            ]);
+        }
+
+        $logs = $this->getLogs($request->from, $request->to);
+
+        $summary = $this->buildLateSummary($logs);
+        // REMOVE zero late
+        $summary = array_filter($summary, function ($row) {
+            return $row['late_seconds'] > 0;
+        });
+
+        return view('hr.late', [
+            'data' => array_values($summary),
+            'from' => $request->from,
+            'to' => $request->to
+        ]);
+    }
+public function lateDetails(Request $request, $employeeNo)
+{
+    $logs = $this->getLogs($request->from, $request->to);
+
+    $data = $logs->filter(function ($log) use ($employeeNo) {
+        return $log->employee_no == $employeeNo
+            && strtoupper($log->tag) === 'IN'
+            && $this->calculateLateSeconds($log->time_log) > 0;
+    })->map(function ($log) {
+        return [
+            'date' => $log->date_log,
+            'time' => $log->time_log,
+            'late' => gmdate('H:i:s', $this->calculateLateSeconds($log->time_log)),
+        ];
+    })->values();
+
+    return response()->json([
+        'data' => $data
+    ]);
+}
+    private function calculateLateSeconds($timeIn)
+    {
+        if (!$timeIn) return 0;
+
+        $start = strtotime('08:00:00');
+        $grace = $start + (self::GRACE_MINUTES * 60);
+        $in = strtotime($timeIn);
+
+        if ($in <= $grace) {
+            return 0;
+        }
+
+        return $in - $grace;
+    }
     public function index()
     {
         $logs = BiometricTemp::orderBy('date_log', 'desc')
@@ -271,4 +278,137 @@ class ReportController extends Controller
 
         return view('bio_dtr', compact('logs'));
     }
+    public function lateReport(Request $request)
+    {
+        $logs = $this->getLogs($request->from, $request->to);
+
+        $summary = $this->buildLateSummary($logs);
+
+        // ❌ REMOVE employees with 0 late
+        $summary = array_filter($summary, function ($row) {
+            return $row['late_seconds'] > 0;
+        });
+
+        $grandTotalLates = array_sum(array_column($summary, 'late_seconds'));
+
+        return view('hr.late-report', [
+            'summary' => array_values($summary),
+            'grandTotalLates' => gmdate('H:i:s', $grandTotalLates),
+            'from' => $request->from,
+            'to' => $request->to
+        ]);
+    }
+    private function isWorkingDay($date)
+    {
+        $dayOfWeek = date('N', strtotime($date)); 
+        // 6 = Saturday, 7 = Sunday
+
+        if ($dayOfWeek >= 6) {
+            return false;
+        }
+
+        // OPTIONAL: holiday check (table-based)
+        $isHoliday = DB::table('holidays')
+            ->where('holiday_date', $date)
+            ->exists();
+
+        if ($isHoliday) {
+            return false;
+        }
+
+        return true;
+    }
+    private function calculateLateSecondsDynamic($timeIn, $graceMinutes)
+    {
+        if (!$timeIn) return 0;
+
+        $start = strtotime('08:00:00');
+        $grace = $start + ($graceMinutes * 60);
+        $in = strtotime($timeIn);
+
+        if ($in <= $grace) {
+            return 0;
+        }
+
+        return $in - $grace;
+    }
+private function buildLateSummary($logs)
+{
+    $summary = [];
+
+    foreach ($logs as $log) {
+
+        if (!$log->employee_no || !$log->time_log || !$log->date_log) {
+            continue;
+        }
+
+        if (strtoupper($log->tag) !== 'IN') {
+            continue;
+        }
+
+        if (!$this->isWorkingDay($log->date_log)) {
+            continue;
+        }
+
+        $key = trim($log->employee_no);
+        $timeIn = strtotime($log->time_log);
+
+        $isHalfDay = $this->isHalfDayByTime($log->time_log);
+
+        $lateSeconds = 0;
+
+        // =========================
+        // FULL DAY RULE (08:00 base)
+        // =========================
+        if (!$isHalfDay) {
+            $lateSeconds = $this->calculateLateSecondsDynamic(
+                $log->time_log,
+                self::GRACE_MINUTES
+            );
+        }
+
+        // =========================
+        // HALF DAY RULE (12:00 base)
+        // =========================
+        if ($isHalfDay) {
+
+            $halfStart = strtotime('12:00:00');
+            $halfGraceEnd = $halfStart + (90 * 60); // 13:30
+
+            if ($timeIn > $halfGraceEnd) {
+                $lateSeconds = $timeIn - $halfGraceEnd;
+            } else {
+                $lateSeconds = 0;
+            }
+        }
+
+        if (!isset($summary[$key])) {
+            $summary[$key] = [
+                'employeeNo'    => $key,
+                'employeeName'  => $log->employeeName ?? 'N/A',
+                'late_seconds'  => 0,
+                'late_count'    => 0,
+                'halfday_count' => 0,
+                'gracePeriod'   => self::GRACE_MINUTES,
+            ];
+        }
+
+        // count half-day
+        if ($isHalfDay) {
+            $summary[$key]['halfday_count']++;
+        }
+
+        // count late
+        if ($lateSeconds > 0) {
+            $summary[$key]['late_seconds'] += $lateSeconds;
+            $summary[$key]['late_count']++;
+        }
+    }
+
+    foreach ($summary as &$row) {
+        $row['late_hms'] = gmdate('H:i:s', $row['late_seconds']);
+    }
+
+    return $summary;
+}
 }
