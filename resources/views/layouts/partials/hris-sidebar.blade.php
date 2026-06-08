@@ -42,6 +42,10 @@
         <!-- TIME -->
         <div class="menu-title mt-4">TIME MANAGEMENT</div>
 
+        <a href="/bio-dtr" class="sidebar-link {{ request()->is('attendance*') ? 'active' : '' }}">
+            <i class="bi bi-clock-fill"></i><span>Bio DTR</span>
+        </a>
+
         <a href="/attendance" class="sidebar-link {{ request()->is('attendance*') ? 'active' : '' }}">
             <i class="bi bi-clock-fill"></i><span>Attendance</span>
         </a>
