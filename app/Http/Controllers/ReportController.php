@@ -12,6 +12,10 @@ class ReportController extends Controller
 {
     private const GRACE_MINUTES = 15;
     private const NTE_THRESHOLD_SECONDS = 14400; // 4 hours
+    private function isHalfDayByTime($timeIn)
+    {
+        return strtotime($timeIn) >= strtotime('12:00:00');
+    }
     public function generateNTE(Request $request, $employeeNo)
     {
         $logs = $this->getLogs($request->from, $request->to);
@@ -347,16 +351,36 @@ private function buildLateSummary($logs)
         }
 
         $key = trim($log->employee_no);
+        $timeIn = strtotime($log->time_log);
 
-        $scheduleType = $log->schedule_type ?? 'FULL';
-        $isHalfDay = ($scheduleType === 'HALF');
+        $isHalfDay = $this->isHalfDayByTime($log->time_log);
 
-        $graceMinutes = $isHalfDay ? 90 : self::GRACE_MINUTES;
+        $lateSeconds = 0;
 
-        $lateSeconds = $this->calculateLateSecondsDynamic(
-            $log->time_log,
-            $graceMinutes
-        );
+        // =========================
+        // FULL DAY RULE (08:00 base)
+        // =========================
+        if (!$isHalfDay) {
+            $lateSeconds = $this->calculateLateSecondsDynamic(
+                $log->time_log,
+                self::GRACE_MINUTES
+            );
+        }
+
+        // =========================
+        // HALF DAY RULE (12:00 base)
+        // =========================
+        if ($isHalfDay) {
+
+            $halfStart = strtotime('12:00:00');
+            $halfGraceEnd = $halfStart + (90 * 60); // 13:30
+
+            if ($timeIn > $halfGraceEnd) {
+                $lateSeconds = $timeIn - $halfGraceEnd;
+            } else {
+                $lateSeconds = 0;
+            }
+        }
 
         if (!isset($summary[$key])) {
             $summary[$key] = [
@@ -369,18 +393,12 @@ private function buildLateSummary($logs)
             ];
         }
 
-        // ✅ count half-day days
+        // count half-day
         if ($isHalfDay) {
             $summary[$key]['halfday_count']++;
         }
 
-        // ✅ HALF DAY RULE:
-        // ignore late if less than 1h30 (5400 sec)
-        if ($isHalfDay && $lateSeconds < 5400) {
-            continue;
-        }
-
-        // ✅ FULL DAY OR VALID HALF DAY LATE
+        // count late
         if ($lateSeconds > 0) {
             $summary[$key]['late_seconds'] += $lateSeconds;
             $summary[$key]['late_count']++;
