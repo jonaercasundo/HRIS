@@ -335,7 +335,7 @@ public function lateDetails(Request $request, $employeeNo)
 private function buildLateSummary($logs)
 {
     $summary = [];
-
+    $lateDaysTracker = []; // ✅ FIX: must exist
     foreach ($logs as $log) {
 
         if (!$log->employee_no || !$log->time_log || !$log->date_log) {
@@ -350,7 +350,8 @@ private function buildLateSummary($logs)
             continue;
         }
 
-        $key = trim($log->employee_no);
+        $emp  = trim($log->employee_no);   // ✅ FIX
+        $date = $log->date_log;           // ✅ FIX
         $timeIn = strtotime($log->time_log);
 
         $isHalfDay = $this->isHalfDayByTime($log->time_log);
@@ -382,9 +383,9 @@ private function buildLateSummary($logs)
             }
         }
 
-        if (!isset($summary[$key])) {
-            $summary[$key] = [
-                'employeeNo'    => $key,
+        if (!isset($summary[$emp])) {
+            $summary[$emp] = [
+                'employeeNo'    => $emp,
                 'employeeName'  => $log->employeeName ?? 'N/A',
                 'late_seconds'  => 0,
                 'late_count'    => 0,
@@ -395,13 +396,20 @@ private function buildLateSummary($logs)
 
         // count half-day
         if ($isHalfDay) {
-            $summary[$key]['halfday_count']++;
+            $summary[$emp]['halfday_count']++;
         }
 
-        // count late
         if ($lateSeconds > 0) {
-            $summary[$key]['late_seconds'] += $lateSeconds;
-            $summary[$key]['late_count']++;
+
+            $dayKey = $emp . '_' . $date;
+
+            if (!isset($lateDaysTracker[$dayKey])) {
+                $lateDaysTracker[$dayKey] = true;
+
+                $summary[$emp]['late_count']++; // daily frequency ONLY
+            }
+
+            $summary[$emp]['late_seconds'] += $lateSeconds;
         }
     }
 
