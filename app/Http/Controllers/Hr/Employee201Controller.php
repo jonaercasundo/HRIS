@@ -43,34 +43,23 @@ class Employee201Controller extends Controller
      */
     public function saveEmail(Request $request)
     {
-        // Changed email to nullable so HR can delete an incorrect email string entirely
         $request->validate([
             'employee_no' => 'required|string',
-            'email'       => 'nullable|email|max:255'
+            'email'       => 'required|email|max:255'
         ]);
 
-        $employeeNo = $request->input('employee_no');
-        $emailValue = $request->input('email');
-
-        // Clean-up handler: If input is cleared out, remove the obsolete record row completely
-        if (is_null($emailValue) || trim($emailValue) === '') {
-            EmployeeEmail::where('employee_no', $employeeNo)->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Corporate identity email successfully cleared from profile records.'
-            ]);
-        }
-
-        // Upsert record structure securely
-        EmployeeEmail::updateOrCreate(
-            ['employee_no' => $employeeNo],
-            ['email' => trim($emailValue)]
+        DB::table('employee_emails')->updateOrInsert(
+            ['employee_no' => $request->employee_no], // check condition
+            [
+                'email' => trim($request->email),
+                'updated_at' => now(),
+                'created_at' => now() // only used if inserting new
+            ]
         );
 
         return response()->json([
             'success' => true,
-            'message' => 'Identity verification profile updated successfully.'
+            'message' => 'Email saved successfully (inserted or updated).'
         ]);
     }
 }
