@@ -11,6 +11,35 @@ use App\Models\BiometricTemp;
 class ReportController extends Controller
 {
     private const GRACE_MINUTES = 30;
+    private const NTE_THRESHOLD_SECONDS = 14400; // 4 hours
+    public function generateNTE(Request $request, $employeeNo)
+    {
+        $logs = $this->getLogs($request->from, $request->to);
+
+        $summary = $this->buildLateSummary($logs);
+
+        if (!isset($summary[$employeeNo])) {
+            return abort(404, 'No late record found');
+        }
+
+        $employee = $summary[$employeeNo];
+
+        // ❌ BLOCK IF BELOW 4 HOURS
+        if ($employee['late_seconds'] < self::NTE_THRESHOLD_SECONDS) {
+            return response()->json([
+                'success' => false,
+                'message' => 'NTE not required. Employee has less than 4 hours total late.'
+            ], 403);
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('hr.reports.nte', [
+            'employee' => $employee,
+            'from' => $request->from,
+            'to' => $request->to
+        ])->setPaper('A4');
+
+        return $pdf->download("NTE-{$employeeNo}.pdf");
+    }
     private function getLogs($from, $to)
     {
         return DB::table('zkteco_dtr_tag_temp as b')

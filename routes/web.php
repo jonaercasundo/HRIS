@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/bio-dtr-sync', [BiometricsController::class, 'syncBio1']);
         Route::get('/reports', [ReportController::class, 'lateReport'])->name('reports.late');
         Route::post('/reports/filter', [ReportController::class, 'filter']);
+        Route::get('/reports/nte/{employeeNo}', [ReportController::class, 'generateNTE']);
     });
 
     /*
