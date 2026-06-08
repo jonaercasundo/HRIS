@@ -28,7 +28,7 @@ class ReportController extends Controller
 
         $employee = $summary[$employeeNo];
 
-        // ✅ NEW RULE: 5 late occurrences required
+        // ✅ FINAL RULE: 5 LATE OCCURRENCES ONLY
         if ($employee['late_count'] < 5) {
             return response()->json([
                 'success' => false,
