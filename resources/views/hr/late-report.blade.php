@@ -179,7 +179,7 @@
                                 </td>
                                 <td class="pe-3 text-end">
                                     <div class="d-inline-flex gap-1.5 align-items-center justify-content-end">
-                                        @if(($row['late_seconds'] ?? 0) >= 14400)
+                                        @if(($row['late_count'] ?? 0) >= 5)
                                             <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
                                                class="btn btn-outline-danger btn-xs d-inline-flex align-items-center gap-1 shadow-sm">
                                                 <i class="bi bi-download" style="font-size: 0.65rem;"></i>

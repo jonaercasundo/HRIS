@@ -335,7 +335,8 @@ public function lateDetails(Request $request, $employeeNo)
 private function buildLateSummary($logs)
 {
     $summary = [];
-    $lateDaysTracker = []; // ✅ FIX: must exist
+    $lateDaysTracker = [];
+
     foreach ($logs as $log) {
 
         if (!$log->employee_no || !$log->time_log || !$log->date_log) {
@@ -350,71 +351,57 @@ private function buildLateSummary($logs)
             continue;
         }
 
-        $emp  = trim($log->employee_no);   // ✅ FIX
-        $date = $log->date_log;           // ✅ FIX
-        $timeIn = strtotime($log->time_log);
+        $emp  = trim($log->employee_no);
+        $date = $log->date_log;
 
+        $timeIn = strtotime($log->time_log);
         $isHalfDay = $this->isHalfDayByTime($log->time_log);
 
-        $lateSeconds = 0;
+        // =========================
+        // ONLY CHECK IF LATE (NO SECONDS)
+        // =========================
+        $isLate = false;
 
-        // =========================
-        // FULL DAY RULE (08:00 base)
-        // =========================
         if (!$isHalfDay) {
-            $lateSeconds = $this->calculateLateSecondsDynamic(
-                $log->time_log,
-                self::GRACE_MINUTES
-            );
+            $start = strtotime('08:00:00');
+            $grace = $start + (self::GRACE_MINUTES * 60);
+
+            $isLate = $timeIn > $grace;
         }
 
-        // =========================
-        // HALF DAY RULE (12:00 base)
-        // =========================
         if ($isHalfDay) {
-
             $halfStart = strtotime('12:00:00');
-            $halfGraceEnd = $halfStart + (90 * 60); // 13:30
+            $halfGraceEnd = $halfStart + (90 * 60);
 
-            if ($timeIn > $halfGraceEnd) {
-                $lateSeconds = $timeIn - $halfGraceEnd;
-            } else {
-                $lateSeconds = 0;
-            }
+            $isLate = $timeIn > $halfGraceEnd;
         }
 
         if (!isset($summary[$emp])) {
             $summary[$emp] = [
                 'employeeNo'    => $emp,
                 'employeeName'  => $log->employeeName ?? 'N/A',
-                'late_seconds'  => 0,
-                'late_count'    => 0,
+                'late_count'    => 0,   // ✅ ONLY THIS MATTERS
                 'halfday_count' => 0,
-                'gracePeriod'   => self::GRACE_MINUTES,
             ];
         }
 
-        // count half-day
         if ($isHalfDay) {
             $summary[$emp]['halfday_count']++;
         }
 
-        if ($lateSeconds > 0) {
+        // =========================
+        // FREQUENCY ONLY (1 PER DAY)
+        // =========================
+        if ($isLate) {
 
             $dayKey = $emp . '_' . $date;
 
             if (!isset($lateDaysTracker[$dayKey])) {
                 $lateDaysTracker[$dayKey] = true;
 
-                $summary[$emp]['late_count']++; // daily frequency ONLY
+                $summary[$emp]['late_count']++;
             }
-
-            $summary[$emp]['late_seconds'] += $lateSeconds;
         }
-    }
-
-    foreach ($summary as &$row) {
-        $row['late_hms'] = gmdate('H:i:s', $row['late_seconds']);
     }
 
     return $summary;
