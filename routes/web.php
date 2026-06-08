@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\BiometricsController;
+use App\Http\Controllers\hr\Employee201Controller;
 
 
 /*
@@ -71,7 +72,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/reports/filter', [ReportController::class, 'filter']);
         Route::get('/reports/nte/{employeeNo}', [ReportController::class, 'generateNTE']);
         Route::get('/reports/late/details/{employeeNo}', [ReportController::class, 'lateDetails']);
-        
+        Route::get('/employee-201', [Employee201Controller::class, 'index']);
+        Route::post('/employee-201/save-email', [Employee201Controller::class, 'saveEmail']);
     });
 
     /*
