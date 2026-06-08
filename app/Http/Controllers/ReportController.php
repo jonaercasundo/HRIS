@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 use App\Models\BiometricTemp;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 class ReportController extends Controller
 {
     private const GRACE_MINUTES = 15;
@@ -300,16 +301,15 @@ public function lateDetails(Request $request, $employeeNo)
     }
     private function isWorkingDay($date)
     {
-        $dayOfWeek = date('N', strtotime($date)); 
-        // 6 = Saturday, 7 = Sunday
+        $carbonDate = Carbon::parse($date);
 
-        if ($dayOfWeek >= 6) {
+        // 6 = Saturday, 7 = Sunday
+        if ($carbonDate->isWeekend()) {
             return false;
         }
 
-        // OPTIONAL: holiday check (table-based)
         $isHoliday = DB::table('holidays')
-            ->where('holiday_date', $date)
+            ->whereDate('holiday_date', $carbonDate->toDateString())
             ->exists();
 
         if ($isHoliday) {
