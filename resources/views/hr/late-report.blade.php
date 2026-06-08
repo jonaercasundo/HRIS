@@ -96,13 +96,6 @@
                     <button type="submit" class="btn btn-compact-primary w-100 rounded-2 shadow-sm d-flex align-items-center justify-content-center gap-1.5" style="height: 31px;">
                         <i class="bi bi-lightning-charge-fill"></i> Compile Matrix
                     </button>
-                    
-                    @if($row['late_seconds'] >= 14400)
-                        <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
-                        class="btn btn-sm btn-danger">
-                            Download NTE
-                        </a>
-                    @endif
                 </div>
             </form>
         </div>
@@ -163,6 +156,14 @@
                                         {{ (int)($parts[1] ?? 0) }}m 
                                         {{ (int)($parts[2] ?? 0) }}s
                                     </span>
+                                </td>
+                                <td>
+                                    @if($row['late_seconds'] >= 14400)
+                                        <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
+                                           class="btn btn-sm btn-danger">
+                                            Download NTE
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
