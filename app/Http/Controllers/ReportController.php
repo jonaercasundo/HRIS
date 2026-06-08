@@ -267,7 +267,14 @@ class ReportController extends Controller
             $summary[$key]['late_seconds'] += $this->calculateLateSeconds($log->time_log);
         }
 
-        foreach ($summary as &$row) {
+        foreach ($summary as $key => &$row) {
+
+            // Remove employees with no late records
+            if ($row['late_seconds'] <= 0) {
+                unset($summary[$key]);
+                continue;
+            }
+
             $row['late_hms'] = gmdate('H:i:s', $row['late_seconds']);
         }
 

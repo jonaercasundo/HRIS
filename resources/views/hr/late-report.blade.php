@@ -150,7 +150,7 @@
                                         $parts = explode(':', $lateString);
                                     @endphp
 
-                                    <span class="badge badge-compact rounded-1 badge-late-alert font-monospace">
+                                    <span class="badge badge-compact rounded-1 badge-late-alert" style="font-family: var(--bs-font-monospace, monospace); letter-spacing: -0.02em;">
                                         <i class="bi bi-exclamation-circle me-1"></i>
                                         {{ (int)($parts[0] ?? 0) }}h 
                                         {{ (int)($parts[1] ?? 0) }}m 
