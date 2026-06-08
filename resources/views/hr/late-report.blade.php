@@ -43,6 +43,7 @@
                     <tr>
                         <th>Employee No</th>
                         <th>Name</th>
+                        <th>Grace Period</th>
                         <th>Total Late (HH:MM:SS)</th>
                     </tr>
                 </thead>
@@ -52,6 +53,7 @@
                         <tr>
                             <td>{{ $row['employeeNo'] }}</td>
                             <td>{{ $row['employeeName'] }}</td>
+                            <td>{{ $row['gracePeriod'] }}</td>
                             <td>
                                 @php
                                     $parts = explode(':', $row['late_hms']);

@@ -259,6 +259,7 @@ class ReportController extends Controller
                 $summary[$key] = [
                     'employeeNo'   => $key,
                     'employeeName' => $log->employeeName ?? 'N/A',
+                    'gracePeriod'  => self::GRACE_MINUTES,
                     'late_seconds' => 0,
                 ];
             }
