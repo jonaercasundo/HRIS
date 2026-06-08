@@ -28,15 +28,15 @@ class ReportController extends Controller
 
         $employee = $summary[$employeeNo];
 
-        // ❌ BLOCK IF BELOW 4 HOURS
-        if ($employee['late_seconds'] < self::NTE_THRESHOLD_SECONDS) {
+        // ✅ NEW RULE: 5 late occurrences required
+        if ($employee['late_count'] < 5) {
             return response()->json([
                 'success' => false,
-                'message' => 'NTE not required. Employee has less than 4 hours total late.'
+                'message' => 'NTE not required. Employee must have at least 5 late occurrences.'
             ], 403);
         }
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('hr.reports.nte', [
+        $pdf = Pdf::loadView('hr.reports.nte', [
             'employee' => $employee,
             'from' => $request->from,
             'to' => $request->to
