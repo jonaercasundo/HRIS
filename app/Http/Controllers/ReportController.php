@@ -10,6 +10,7 @@ use App\Exports\AttendanceExport;
 use App\Models\BiometricTemp;
 class ReportController extends Controller
 {
+    private const GRACE_MINUTES = 15;
     private function getLogs($from, $to)
     {
         return DB::table('zkteco_dtr_tag_temp as b')
@@ -179,42 +180,40 @@ class ReportController extends Controller
     }
     public function late(Request $request)
     {
-        $from = $request->from;
-        $to   = $request->to;
-
-        if (!$from || !$to) {
+        if (!$request->from || !$request->to) {
             return view('hr.late', [
                 'data' => [],
                 'from' => null,
-                'to'   => null
+                'to' => null
             ]);
         }
 
-        $query = DB::table('zkteco_dtr_tag_temp as b')
-            ->leftJoin('e_basicinfo as e', function ($join) {
-                $join->on(DB::raw('TRIM(b.employee_no)'), '=', DB::raw('TRIM(e.employeeNo)'));
-            })
-            ->where('b.tag', 'IN')
-            ->whereTime('b.time_log', '>', '08:00:00')
-            ->when($from && $to, function ($q) use ($from, $to) {
-                $q->whereBetween('b.date_log', [$from, $to]);
-            })
-            ->orderBy('b.employee_no')
-            ->orderBy('b.date_log');
+        $logs = $this->getLogs($request->from, $request->to);
 
-        $data = $query->select(
-            'b.employee_no as employeeNo',
-            'b.date_log',
-            'b.time_log',
-            DB::raw("
-                COALESCE(
-                    CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName),
-                    b.employee_no
-                ) as employeeName
-            ")
-        )->get();
+        $filtered = $logs->filter(function ($log) {
+            return $log->tag === 'IN'
+                && $this->calculateLateSeconds($log->time_log) > 0;
+        });
 
-        return view('hr.late', compact('data', 'from', 'to'));
+        return view('hr.late', [
+            'data' => $filtered->values(),
+            'from' => $request->from,
+            'to' => $request->to
+        ]);
+    }
+    private function calculateLateSeconds($timeIn)
+    {
+        if (!$timeIn) return 0;
+
+        $start = strtotime('08:00:00');
+        $grace = $start + (self::GRACE_MINUTES * 60);
+        $in = strtotime($timeIn);
+
+        if ($in <= $grace) {
+            return 0;
+        }
+
+        return $in - $grace;
     }
     public function index()
     {
@@ -227,39 +226,50 @@ class ReportController extends Controller
     }
     public function lateReport(Request $request)
     {
-        $query = DB::table('attendances')
-            ->where('status', 'Late');
+        $logs = $this->getLogs($request->from, $request->to);
 
-        if ($request->filled('from')) {
-            $query->whereDate('date_log', '>=', $request->from);
+        $summary = $this->buildLateSummary($logs);
+
+        $grandTotalLates = array_sum(array_column($summary, 'late_seconds'));
+
+        return view('hr.late-report', [
+            'summary' => array_values($summary),
+            'grandTotalLates' => gmdate('H:i:s', $grandTotalLates),
+            'from' => $request->from,
+            'to' => $request->to
+        ]);
+    }
+    private function buildLateSummary($logs)
+    {
+        $summary = [];
+
+        foreach ($logs as $log) {
+
+            if (!$log->employee_no || !$log->time_log) {
+                continue;
+            }
+
+            if (strtoupper($log->tag) !== 'IN') {
+                continue;
+            }
+
+            $key = trim($log->employee_no);
+
+            if (!isset($summary[$key])) {
+                $summary[$key] = [
+                    'employeeNo'   => $key,
+                    'employeeName' => $log->employeeName ?? 'N/A',
+                    'late_seconds' => 0,
+                ];
+            }
+
+            $summary[$key]['late_seconds'] += $this->calculateLateSeconds($log->time_log);
         }
 
-        if ($request->filled('to')) {
-            $query->whereDate('date_log', '<=', $request->to);
+        foreach ($summary as &$row) {
+            $row['late_hms'] = gmdate('H:i:s', $row['late_seconds']);
         }
 
-        // Detailed records
-        $data = (clone $query)
-            ->orderBy('date_log', 'desc')
-            ->get();
-
-        // Summary per employee
-        $summary = (clone $query)
-            ->select(
-                'employeeNo',
-                'employeeName',
-                DB::raw('COUNT(*) as total_lates')
-            )
-            ->groupBy('employeeNo', 'employeeName')
-            ->orderByDesc('total_lates')
-            ->get();
-
-        $grandTotalLates = $summary->sum('total_lates');
-
-        return view('hr.late-report', compact(
-            'data',
-            'summary',
-            'grandTotalLates'
-        ));
+        return $summary;
     }
 }

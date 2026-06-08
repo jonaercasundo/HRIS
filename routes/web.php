@@ -63,11 +63,12 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::get('/reports/daily', [ReportController::class, 'daily']);
-        Route::get('/reports/late', [ReportController::class, 'late']);
         Route::get('/reports/no-time-out', [ReportController::class, 'noTimeOut']);
         Route::get('/reports/no-time-in', [ReportController::class, 'noTimeIn']);
         Route::get('/bio-dtr', [BiometricsController::class, 'index']);
         Route::get('/bio-dtr-sync', [BiometricsController::class, 'syncBio1']);
+        Route::get('/reports', [ReportController::class, 'lateReport']);
+        Route::post('/reports/filter', [ReportController::class, 'filter']);
     });
 
     /*
