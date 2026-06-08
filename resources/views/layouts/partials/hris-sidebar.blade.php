@@ -23,7 +23,7 @@
 
         <div class="menu-title mt-3">EMPLOYEE CORE</div>
 
-        <a href="/hr/employee-201" class="sidebar-link {{ request()->is('hr/employee-201*') ? 'active' : '' }}">
+        <a href="/employee-201" class="sidebar-link {{ request()->is('employee-201*') ? 'active' : '' }}">
             <i class="bi bi-people-fill"></i><span>Employee Directory</span>
         </a>
 
