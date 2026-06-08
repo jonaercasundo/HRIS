@@ -79,6 +79,6 @@ class BiometricsController extends Controller
             ->limit(200)
             ->get();
 
-        return view('bio_dtr', compact('logs'));
+        return view('hr.bio_dtr', compact('logs'));
     }
 }
