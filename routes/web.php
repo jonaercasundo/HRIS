@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\BiometricsController;
 
 
 /*
@@ -65,6 +66,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/late', [ReportController::class, 'late']);
         Route::get('/reports/no-time-out', [ReportController::class, 'noTimeOut']);
         Route::get('/reports/no-time-in', [ReportController::class, 'noTimeIn']);
+        Route::get('/bio-dtr', [BiometricsController::class, 'index']);
+        Route::get('/bio-dtr-sync', [BiometricsController::class, 'syncBio1']);
     });
 
     /*

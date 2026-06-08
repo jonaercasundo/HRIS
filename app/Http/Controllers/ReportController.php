@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
+use App\Models\BiometricTemp;
 class ReportController extends Controller
 {
     private function getLogs($from, $to)
@@ -214,5 +215,51 @@ class ReportController extends Controller
         )->get();
 
         return view('hr.late', compact('data', 'from', 'to'));
+    }
+    public function index()
+    {
+        $logs = BiometricTemp::orderBy('date_log', 'desc')
+            ->orderBy('time_log', 'desc')
+            ->limit(200)
+            ->get();
+
+        return view('bio_dtr', compact('logs'));
+    }
+    public function lateReport(Request $request)
+    {
+        $query = DB::table('attendances')
+            ->where('status', 'Late');
+
+        if ($request->filled('from')) {
+            $query->whereDate('date_log', '>=', $request->from);
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('date_log', '<=', $request->to);
+        }
+
+        // Detailed records
+        $data = (clone $query)
+            ->orderBy('date_log', 'desc')
+            ->get();
+
+        // Summary per employee
+        $summary = (clone $query)
+            ->select(
+                'employeeNo',
+                'employeeName',
+                DB::raw('COUNT(*) as total_lates')
+            )
+            ->groupBy('employeeNo', 'employeeName')
+            ->orderByDesc('total_lates')
+            ->get();
+
+        $grandTotalLates = $summary->sum('total_lates');
+
+        return view('hr.late-report', compact(
+            'data',
+            'summary',
+            'grandTotalLates'
+        ));
     }
 }
