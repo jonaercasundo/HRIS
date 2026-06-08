@@ -4,10 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 use App\Models\BiometricTemp;
+use Barryvdh\DomPDF\Facade\Pdf;
 class ReportController extends Controller
 {
     private const GRACE_MINUTES = 30;
@@ -282,23 +282,30 @@ class ReportController extends Controller
                 continue;
             }
 
+            $lateSeconds = $this->calculateLateSeconds($log->time_log);
+
+            if ($lateSeconds <= 0) {
+                continue; // only count actual late logs
+            }
+
             $key = trim($log->employee_no);
 
             if (!isset($summary[$key])) {
                 $summary[$key] = [
-                    'employeeNo'   => $key,
-                    'employeeName' => $log->employeeName ?? 'N/A',
-                    'gracePeriod'  => self::GRACE_MINUTES,
-                    'late_seconds' => 0,
+                    'employeeNo'    => $key,
+                    'employeeName'  => $log->employeeName ?? 'N/A',
+                    'gracePeriod'   => self::GRACE_MINUTES,
+                    'late_seconds'  => 0,
+                    'late_count'    => 0, // 👈 ADD THIS
                 ];
             }
 
-            $summary[$key]['late_seconds'] += $this->calculateLateSeconds($log->time_log);
+            $summary[$key]['late_seconds'] += $lateSeconds;
+            $summary[$key]['late_count']++; // 👈 INCREMENT FREQUENCY
         }
 
         foreach ($summary as $key => &$row) {
 
-            // Remove employees with no late records
             if ($row['late_seconds'] <= 0) {
                 unset($summary[$key]);
                 continue;

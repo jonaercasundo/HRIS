@@ -129,6 +129,7 @@
                             <th class="ps-3">Employee No</th>
                             <th>Employee Name</th>
                             <th>Grace Period</th>
+                            <th>Late Frequency</th>
                             <th class="pe-3">Total Late Calculation (HH:MM:SS)</th>
                         </tr>
                     </thead>
@@ -155,6 +156,11 @@
                                         {{ (int)($parts[0] ?? 0) }}h 
                                         {{ (int)($parts[1] ?? 0) }}m 
                                         {{ (int)($parts[2] ?? 0) }}s
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-secondary border px-1.5 py-0.5 rounded-1 text-xs">
+                                        {{ $row['late_count'] }}
                                     </span>
                                 </td>
                                 <td>
