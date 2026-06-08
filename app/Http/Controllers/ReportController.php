@@ -10,7 +10,7 @@ use App\Exports\AttendanceExport;
 use App\Models\BiometricTemp;
 class ReportController extends Controller
 {
-    private const GRACE_MINUTES = 15;
+    private const GRACE_MINUTES = 30;
     private function getLogs($from, $to)
     {
         return DB::table('zkteco_dtr_tag_temp as b')
