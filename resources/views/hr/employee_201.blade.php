@@ -12,8 +12,6 @@
             <tr>
                 <th>Employee No</th>
                 <th>Name</th>
-                <th>Position</th>
-                <th>Department</th>
                 <th>Email</th>
                 <th>Action</th>
             </tr>
@@ -24,8 +22,6 @@
             <tr>
                 <td>{{ $emp->employeeNo }}</td>
                 <td>{{ $emp->firstName }} {{ $emp->lastName }}</td>
-                <td>{{ $emp->position }}</td>
-                <td>{{ $emp->department }}</td>
 
                 <td>
                     <input type="email"

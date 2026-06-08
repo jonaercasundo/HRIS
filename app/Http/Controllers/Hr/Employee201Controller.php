@@ -19,9 +19,7 @@ class Employee201Controller extends Controller
                 'e.employeeNo',
                 'e.firstName',
                 'e.lastName',
-                'e.position',
-                'e.department',
-                'ee.email'
+                'e.email'
             )
             ->when($search, function ($q) use ($search) {
                 $q->where('e.employeeNo', 'like', "%$search%")
