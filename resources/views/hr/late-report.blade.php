@@ -187,6 +187,11 @@
                                     @else
                                         <span class="text-muted text-xs font-medium" style="font-size: 0.7rem;"><i class="bi bi-check-circle-fill text-success me-1"></i>Compliant</span>
                                     @endif
+                                    <button type="button"
+                                            class="btn btn-primary btn-xs view-late"
+                                            data-id="{{ $row['employeeNo'] }}">
+                                        View
+                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -205,6 +210,80 @@
             </div>
         </div>
     </div>
+    <div class="modal fade" id="lateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
 
+        <div class="modal-header">
+            <h5 class="modal-title">
+                Late Details
+                <span class="text-muted">({{ $from }} → {{ $to }})</span>
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+            <table class="table table-bordered">
+            <thead>
+                <tr>
+                <th>Date</th>
+                <th>Time In</th>
+                <th>Late Duration</th>
+                </tr>
+            </thead>
+            <tbody id="lateBody"></tbody>
+            </table>
+        </div>
+
+        </div>
+    </div>
+    </div>
 </div>
 @endsection
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const modal = new bootstrap.Modal(document.getElementById('lateModal'));
+
+    document.querySelectorAll('.view-late').forEach(button => {
+        button.addEventListener('click', function () {
+
+            let empNo = this.getAttribute('data-id');
+
+            document.getElementById('empNo').innerText = empNo;
+            document.getElementById('lateBody').innerHTML =
+                `<tr><td colspan="3" class="text-center">Loading...</td></tr>`;
+
+            fetch(`/reports/late/details/${empNo}?from={{ $from }}&to={{ $to }}`)
+                .then(res => res.json())
+                .then(res => {
+
+                    let rows = '';
+
+                    if (!res.data || res.data.length === 0) {
+                        rows = `<tr><td colspan="3" class="text-center">No late records</td></tr>`;
+                    } else {
+                        res.data.forEach(item => {
+                            rows += `
+                                <tr>
+                                    <td>${item.date}</td>
+                                    <td>${item.time}</td>
+                                    <td>${item.late}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('lateBody').innerHTML = rows;
+                    modal.show();
+                })
+                .catch(err => {
+                    document.getElementById('lateBody').innerHTML =
+                        `<tr><td colspan="3" class="text-danger text-center">Error loading data</td></tr>`;
+                    modal.show();
+                });
+        });
+    });
+
+});
+</script>

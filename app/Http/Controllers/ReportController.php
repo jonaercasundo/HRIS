@@ -219,15 +219,34 @@ class ReportController extends Controller
 
         $logs = $this->getLogs($request->from, $request->to);
 
-        $filtered = $logs->filter(function ($log) {
-            return $log->tag === 'IN'
-                && $this->calculateLateSeconds($log->time_log) > 0;
-        });
+        $summary = $this->buildLateSummary($logs);
 
         return view('hr.late', [
-            'data' => $filtered->values(),
+            'data' => array_values($summary),
             'from' => $request->from,
             'to' => $request->to
+        ]);
+    }
+    public function lateDetails(Request $request, $employeeNo)
+    {
+        $logs = $this->getLogs($request->from, $request->to);
+
+        $data = $logs->filter(function ($log) use ($employeeNo) {
+            return $log->employee_no == $employeeNo
+                && strtoupper($log->tag) === 'IN'
+                && $this->calculateLateSeconds($log->time_log) > 0
+                && $this->isWorkingDay($log->date_log);
+        })->map(function ($log) {
+            return [
+                'date' => $log->date_log,
+                'time' => $log->time_log,
+                'late' => gmdate('H:i:s', $this->calculateLateSeconds($log->time_log))
+            ];
+        })->values();
+
+        return response()->json([
+            'employeeNo' => $employeeNo,
+            'data' => $data
         ]);
     }
     private function calculateLateSeconds($timeIn)
