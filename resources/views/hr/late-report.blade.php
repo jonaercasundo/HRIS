@@ -62,6 +62,14 @@
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         border: none;
     }
+    /* Ultra-Compact High Density Button Spec */
+    .btn-xs {
+        padding: 2px 6px !important;
+        font-size: 0.725rem !important;
+        font-weight: 600 !important;
+        border-radius: 4px !important;
+        line-height: 1.2 !important;
+    }
 </style>
 
 <div class="container-fluid px-3 py-3">
@@ -129,8 +137,9 @@
                             <th class="ps-3">Employee No</th>
                             <th>Employee Name</th>
                             <th>Grace Period</th>
-                            <th class="pe-3">Total Late Calculation (HH:MM:SS)</th>
+                            <th>Total Late Calculation (HH:MM:SS)</th>
                             <th>Late Frequency</th>
+                            <th class="pe-3 text-end">Actions</th>
                         </tr>
                     </thead>
 
@@ -144,9 +153,8 @@
                                         {{ $row['gracePeriod'] }} mins
                                     </span>
                                 </td>
-                                <td class="pe-3">
+                                <td>
                                     @php
-                                        // Absolute boundary safety check to prevent parsing crashes on empty structures
                                         $lateString = !empty($row['late_hms']) ? $row['late_hms'] : '00:00:00';
                                         $parts = explode(':', $lateString);
                                     @endphp
@@ -163,18 +171,21 @@
                                         {{ $row['late_count'] }} counts
                                     </span>
                                 </td>
-                                <td>
-                                    @if($row['late_seconds'] >= 14400)
+                                <td class="pe-3 text-end">
+                                    @if(($row['late_seconds'] ?? 0) >= 14400)
                                         <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
-                                           class="btn btn-sm btn-danger">
-                                            Download NTE
+                                           class="btn btn-outline-danger btn-xs d-inline-flex align-items-center gap-1 shadow-sm">
+                                            <i class="bi bi-download" style="font-size: 0.65rem;"></i>
+                                            <span>NTE</span>
                                         </a>
+                                    @else
+                                        <span class="text-muted text-xs font-medium" style="font-size: 0.7rem;"><i class="bi bi-check-circle-fill text-success me-1"></i>Compliant</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="text-center py-5 text-muted bg-light border-0">
+                                <td colspan="6" class="text-center py-5 text-muted bg-light border-0">
                                     <div class="py-3">
                                         <i class="bi bi-clipboard-x fs-3 text-muted mb-1 d-block"></i>
                                         <p class="mb-0 fw-medium small">No punctual discrepancies tracked within this timeframe</p>
