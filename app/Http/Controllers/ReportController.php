@@ -220,6 +220,10 @@ class ReportController extends Controller
         $logs = $this->getLogs($request->from, $request->to);
 
         $summary = $this->buildLateSummary($logs);
+        // REMOVE zero late
+        $summary = array_filter($summary, function ($row) {
+            return $row['late_seconds'] > 0;
+        });
 
         return view('hr.late', [
             'data' => array_values($summary),
@@ -275,6 +279,11 @@ public function lateDetails(Request $request, $employeeNo)
         $logs = $this->getLogs($request->from, $request->to);
 
         $summary = $this->buildLateSummary($logs);
+
+        // ❌ REMOVE employees with 0 late
+        $summary = array_filter($summary, function ($row) {
+            return $row['late_seconds'] > 0;
+        });
 
         $grandTotalLates = array_sum(array_column($summary, 'late_seconds'));
 
@@ -364,11 +373,18 @@ public function lateDetails(Request $request, $employeeNo)
             }
 
             // 🟡 HALF DAY logic
-            if ($scheduleType === 'HALF') {
+            $isHalfDay = ($scheduleType === 'HALF');
 
-                // half-day is NOT late
-                $summary[$key]['halfday_count']++;
-                continue;
+            if ($lateSeconds > 0) {
+
+                // HALF DAY tolerance rule
+                if ($isHalfDay && $lateSeconds < 5400) {
+                    // not counted as late
+                    continue;
+                }
+
+                $summary[$key]['late_seconds'] += $lateSeconds;
+                $summary[$key]['late_count']++;
             }
 
             // 🔴 LATE logic (FULL DAY only)
