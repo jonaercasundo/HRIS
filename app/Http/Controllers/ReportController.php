@@ -236,26 +236,32 @@ class ReportController extends Controller
             'to' => $request->to
         ]);
     }
-public function lateDetails(Request $request, $employeeNo)
-{
-    $logs = $this->getLogs($request->from, $request->to);
+    public function lateDetails(Request $request, $employeeNo)
+    {
+        $logs = $this->getLogs($request->from, $request->to);
 
-    $data = $logs->filter(function ($log) use ($employeeNo) {
-        return $log->employee_no == $employeeNo
-            && strtoupper($log->tag) === 'IN'
-            && $this->calculateLateSeconds($log->time_log) > 0;
-    })->map(function ($log) {
-        return [
-            'date' => $log->date_log,
-            'time' => $log->time_log,
-            'late' => gmdate('H:i:s', $this->calculateLateSeconds($log->time_log)),
-        ];
-    })->values();
+        $data = $logs->filter(function ($log) use ($employeeNo) {
 
-    return response()->json([
-        'data' => $data
-    ]);
-}
+            // ❌ EXCLUDE weekends + holidays
+            if (!$this->isWorkingDay($log->date_log)) {
+                return false;
+            }
+
+            return $log->employee_no == $employeeNo
+                && strtoupper($log->tag) === 'IN'
+                && $this->calculateLateSeconds($log->time_log) > 0;
+        })->map(function ($log) {
+            return [
+                'date' => $log->date_log,
+                'time' => $log->time_log,
+                'late' => gmdate('H:i:s', $this->calculateLateSeconds($log->time_log)),
+            ];
+        })->values();
+
+        return response()->json([
+            'data' => $data
+        ]);
+    }
     private function calculateLateSeconds($timeIn)
     {
         if (!$timeIn) return 0;
