@@ -8,7 +8,7 @@
     </div>
 
     {{-- FILTER --}}
-    <form method="GET" action="{{ url('/report') }}" class="row g-2 mb-4">
+    <form method="GET" action="{{ route('reports.late') }}" class="row g-2 mb-4">
 
         <div class="col-md-3">
             <input type="date" name="from" value="{{ $from ?? '' }}" class="form-control" required>
