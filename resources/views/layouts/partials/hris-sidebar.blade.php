@@ -1,31 +1,26 @@
-<!-- SIDEBAR CONTAINER -->
-<div class="h-100 d-flex flex-column p-4 hris-sidebar">
+<div class="h-100 d-flex flex-column p-3 hris-sidebar">
 
-    <!-- HEADER -->
-    <div class="sidebar-header mb-4">
-        <div class="d-flex align-items-center gap-3">
+    <div class="sidebar-header mb-3">
+        <div class="d-flex align-items-center gap-2.5">
             <div class="logo-box">
                 <i class="bi bi-person-badge-fill text-white"></i>
             </div>
             <div>
-                <h5 class="text-white fw-bold mb-0">HRIS System</h5>
-                <small class="text-white text-uppercase">HR Platform</small>
+                <h6 class="text-dark fw-bold mb-0 tracking-tight">HRIS System</h6>
+                <span class="text-muted text-uppercase font-bold" style="font-size: 0.6rem; letter-spacing: 0.05em;">HR Platform</span>
             </div>
         </div>
     </div>
 
-    <!-- SCROLL AREA -->
     <div class="sidebar-scroll-wrapper flex-grow-1 overflow-y-auto pe-1">
 
-        <!-- MAIN -->
         <div class="menu-title">MAIN</div>
 
-        <a href="/hr/dashboard" class="sidebar-link {{ request()->is('admin/dashboard') ? 'active' : '' }}">
+        <a href="/hr/dashboard" class="sidebar-link {{ request()->is('hr/dashboard*') || request()->is('admin/dashboard*') ? 'active' : '' }}">
             <i class="bi bi-grid-fill"></i><span>Dashboard</span>
         </a>
 
-        <!-- EMPLOYEES -->
-        <div class="menu-title mt-4">EMPLOYEE CORE</div>
+        <div class="menu-title mt-3">EMPLOYEE CORE</div>
 
         <a href="/employees" class="sidebar-link {{ request()->is('employees*') ? 'active' : '' }}">
             <i class="bi bi-people-fill"></i><span>Employee Directory</span>
@@ -39,25 +34,23 @@
             <i class="bi bi-diagram-2-fill"></i><span>Org Chart</span>
         </a>
 
-        <!-- TIME -->
-        <div class="menu-title mt-4">TIME MANAGEMENT</div>
+        <div class="menu-title mt-3">TIME MANAGEMENT</div>
 
-        <a href="/bio-dtr" class="sidebar-link {{ request()->is('attendance*') ? 'active' : '' }}">
+        <a href="/bio-dtr" class="sidebar-link {{ request()->is('bio-dtr*') ? 'active' : '' }}">
             <i class="bi bi-clock-fill"></i><span>Bio DTR</span>
         </a>
 
         <a href="/attendance" class="sidebar-link {{ request()->is('attendance*') ? 'active' : '' }}">
-            <i class="bi bi-clock-fill"></i><span>Attendance</span>
+            <i class="bi bi-calendar-check-fill"></i><span>Attendance Matrix</span>
         </a>
 
         <a href="/overtime" class="sidebar-link {{ request()->is('overtime*') ? 'active' : '' }}">
-            <i class="bi bi-hourglass-split"></i><span>Overtime</span>
+            <i class="bi bi-hourglass-split"></i><span>Overtime Logs</span>
         </a>
 
-        <!-- LEAVE -->
-        <div class="menu-title mt-4">LEAVE</div>
+        <div class="menu-title mt-3">LEAVE MANAGEMENT</div>
 
-        <a href="/leave" class="sidebar-link {{ request()->is('leave*') ? 'active' : '' }}">
+        <a href="/leave" class="sidebar-link {{ request()->is('leave') || request()->is('leave/requests*') ? 'active' : '' }}">
             <i class="bi bi-airplane-fill"></i><span>Leave Requests</span>
         </a>
 
@@ -65,33 +58,30 @@
             <i class="bi bi-calendar-event-fill"></i><span>Leave Calendar</span>
         </a>
 
-        <!-- PAYROLL -->
-        <div class="menu-title mt-4">PAYROLL</div>
+        <div class="menu-title mt-3">PAYROLL RUNS</div>
 
         <a href="/payroll" class="sidebar-link {{ request()->is('payroll*') ? 'active' : '' }}">
             <i class="bi bi-cash-stack"></i><span>Payroll Engine</span>
         </a>
 
         <a href="/payslips" class="sidebar-link {{ request()->is('payslips*') ? 'active' : '' }}">
-            <i class="bi bi-receipt-cutoff"></i><span>Payslips</span>
+            <i class="bi bi-receipt-cutoff"></i><span>Payslips Hub</span>
         </a>
 
-        <!-- SELF SERVICE -->
-        <div class="menu-title mt-4">SELF SERVICE</div>
+        <div class="menu-title mt-3">SELF SERVICE</div>
 
         <a href="/my-profile" class="sidebar-link {{ request()->is('my-profile*') ? 'active' : '' }}">
             <i class="bi bi-person-circle"></i><span>My Profile</span>
         </a>
 
         <a href="/my-attendance" class="sidebar-link {{ request()->is('my-attendance*') ? 'active' : '' }}">
-            <i class="bi bi-calendar-check-fill"></i><span>My Attendance</span>
+            <i class="bi bi-clock-history"></i><span>My Attendance</span>
         </a>
 
-        <!-- SYSTEM -->
-        <div class="menu-title mt-4">SYSTEM</div>
+        <div class="menu-title mt-3">SYSTEM SECURITY</div>
 
         <a href="/reports" class="sidebar-link {{ request()->is('reports*') ? 'active' : '' }}">
-            <i class="bi bi-bar-chart-fill"></i><span>Reports</span>
+            <i class="bi bi-bar-chart-fill"></i><span>Reports Engine</span>
         </a>
 
         <a href="/settings" class="sidebar-link {{ request()->is('settings*') ? 'active' : '' }}">
@@ -100,127 +90,142 @@
 
     </div>
 
-    <!-- FOOTER -->
-    <div class="pt-3 mt-auto sidebar-footer">
-        <form method="POST" action="{{ route('logout') }}">
+    <div class="pt-2 mt-auto sidebar-footer">
+        <form method="POST" action="{{ route('logout') }}" id="logoutForm">
             @csrf
             <button type="submit" class="logout-btn">
                 <i class="bi bi-box-arrow-right"></i>
-                <span>Logout</span>
+                <span>Sign Out</span>
             </button>
         </form>
     </div>
 
 </div>
 
-<!-- ================= DESIGN SYSTEM ================= -->
 <style>
-/* MAIN SIDEBAR */
+/* MAIN SIDEBAR LIGHT ARCHITECTURE */
 .hris-sidebar {
-    background-color: #09090b;
-    border-right: 1px solid #18181b;
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
 }
 
-/* HEADER */
+/* HEADER boundary alignment */
 .sidebar-header {
-    padding-bottom: 18px;
-    border-bottom: 1px solid #18181b;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-/* LOGO */
+/* BRANDING BOX EMBED */
 .logo-box {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1rem;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.15);
 }
 
-/* MENU TITLE */
+/* GROUP LABEL METRICS */
 .menu-title {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    color: #52525b;
-    margin: 14px 0 10px 12px;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+    margin: 14px 0 6px 8px;
+    text-transform: uppercase;
 }
 
-/* LINK BASE */
+/* FLEXIBLE NAVIGATION LINKS */
 .sidebar-link {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 11px 14px;
-    border-radius: 12px;
-    color: #a1a1aa;
+    gap: 10px;
+    padding: 7px 12px;
+    border-radius: 8px;
+    color: #475569;
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 500;
-    transition: all 0.2s ease;
-    margin-bottom: 4px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    margin-bottom: 2px;
 }
 
-/* HOVER EFFECT */
+/* TRANSITION STATES */
 .sidebar-link:hover {
-    background: #141416;
-    color: #fafafa;
-    transform: translateX(3px);
+    background-color: #f8fafc;
+    color: #0f172a;
 }
 
-/* ACTIVE STATE */
+/* ACTIVE HIGHLIGHT STATE */
 .sidebar-link.active {
-    background: #18181b;
-    color: #ffffff;
-    border: 1px solid #27272a;
+    background-color: #f0fdf4; /* Light green tint matching system attendance markers */
+    color: #15803d;
     font-weight: 600;
 }
 
 .sidebar-link.active i {
-    color: #818cf8;
+    color: #16a34a;
 }
 
-/* ICON */
+/* Dynamic backup fallback matching colorway for primary modules if preferred */
+/* Uncomment if you prefer an indigo theme over green context markers
+.sidebar-link.active {
+    background-color: #e0e7ff;
+    color: #4338ca;
+}
+.sidebar-link.active i {
+    color: #4f46e5;
+}
+*/
+
 .sidebar-link i {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
+    display: inline-flex;
+    align-items: center;
 }
 
-/* SCROLLBAR */
+/* HIGH DESIGNS INTERNAL SCROLLBARS */
 .sidebar-scroll-wrapper::-webkit-scrollbar {
     width: 4px;
 }
 
 .sidebar-scroll-wrapper::-webkit-scrollbar-thumb {
-    background: #27272a;
-    border-radius: 20px;
+    background: #cbd5e1;
+    border-radius: 10px;
 }
 
-/* FOOTER */
+.sidebar-scroll-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* SYSTEM CONTROL FOOTER */
 .sidebar-footer {
-    border-top: 1px solid #18181b;
+    border-top: 1px solid #f1f5f9;
 }
 
-/* LOGOUT BUTTON */
+/* SOFT WARNING TERMINATION TOGGLE BUTTON */
 .logout-btn {
     width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid rgba(239, 68, 68, 0.15);
-    background: rgba(239, 68, 68, 0.05);
-    color: #fca5a5;
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid #fee2e2;
+    background-color: #fef2f2;
+    color: #991b1b;
+    font-size: 0.8rem;
     font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    transition: all 0.2s ease;
+    gap: 8px;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .logout-btn:hover {
-    background: #ef4444;
+    background-color: #ef4444;
     border-color: #ef4444;
-    color: #fff;
+    color: #ffffff;
 }
 </style>
