@@ -328,76 +328,69 @@ public function lateDetails(Request $request, $employeeNo)
 
         return $in - $grace;
     }
-    private function buildLateSummary($logs)
-    {
-        $summary = [];
+private function buildLateSummary($logs)
+{
+    $summary = [];
 
-        foreach ($logs as $log) {
+    foreach ($logs as $log) {
 
-            if (!$log->employee_no || !$log->time_log || !$log->date_log) {
-                continue;
-            }
-
-            if (strtoupper($log->tag) !== 'IN') {
-                continue;
-            }
-
-            // 🚫 skip weekends + holidays
-            if (!$this->isWorkingDay($log->date_log)) {
-                continue;
-            }
-
-            $key = trim($log->employee_no);
-
-            // 👉 detect schedule type (FULL / HALF)
-            $scheduleType = $log->schedule_type ?? 'FULL';
-
-            // ⏱️ adjust grace period
-            $graceMinutes = ($scheduleType === 'HALF') ? 90 : self::GRACE_MINUTES;
-
-            $lateSeconds = $this->calculateLateSecondsDynamic(
-                $log->time_log,
-                $graceMinutes
-            );
-
-            // initialize
-            if (!isset($summary[$key])) {
-                $summary[$key] = [
-                    'employeeNo'     => $key,
-                    'employeeName'   => $log->employeeName ?? 'N/A',
-                    'late_seconds'   => 0,
-                    'late_count'     => 0,
-                    'halfday_count'  => 0,
-                    'gracePeriod'    => self::GRACE_MINUTES,
-                ];
-            }
-
-            // 🟡 HALF DAY logic
-            $isHalfDay = ($scheduleType === 'HALF');
-
-            if ($lateSeconds > 0) {
-
-                // HALF DAY tolerance rule
-                if ($isHalfDay && $lateSeconds < 5400) {
-                    // not counted as late
-                    continue;
-                }
-
-                $summary[$key]['late_seconds'] += $lateSeconds;
-                $summary[$key]['late_count']++;
-            }
-
-            // 🔴 LATE logic (FULL DAY only)
-            if ($lateSeconds > 0) {
-                $summary[$key]['late_seconds'] += $lateSeconds;
-                $summary[$key]['late_count']++;
-            }
+        if (!$log->employee_no || !$log->time_log || !$log->date_log) {
+            continue;
         }
 
-        foreach ($summary as $key => &$row) {
-            $row['late_hms'] = gmdate('H:i:s', $row['late_seconds']);
+        if (strtoupper($log->tag) !== 'IN') {
+            continue;
         }
 
-        return $summary;
+        if (!$this->isWorkingDay($log->date_log)) {
+            continue;
+        }
+
+        $key = trim($log->employee_no);
+
+        $scheduleType = $log->schedule_type ?? 'FULL';
+        $isHalfDay = ($scheduleType === 'HALF');
+
+        $graceMinutes = $isHalfDay ? 90 : self::GRACE_MINUTES;
+
+        $lateSeconds = $this->calculateLateSecondsDynamic(
+            $log->time_log,
+            $graceMinutes
+        );
+
+        if (!isset($summary[$key])) {
+            $summary[$key] = [
+                'employeeNo'    => $key,
+                'employeeName'  => $log->employeeName ?? 'N/A',
+                'late_seconds'  => 0,
+                'late_count'    => 0,
+                'halfday_count' => 0,
+                'gracePeriod'   => self::GRACE_MINUTES,
+            ];
+        }
+
+        // ✅ count half-day days
+        if ($isHalfDay) {
+            $summary[$key]['halfday_count']++;
+        }
+
+        // ✅ HALF DAY RULE:
+        // ignore late if less than 1h30 (5400 sec)
+        if ($isHalfDay && $lateSeconds < 5400) {
+            continue;
+        }
+
+        // ✅ FULL DAY OR VALID HALF DAY LATE
+        if ($lateSeconds > 0) {
+            $summary[$key]['late_seconds'] += $lateSeconds;
+            $summary[$key]['late_count']++;
+        }
     }
+
+    foreach ($summary as &$row) {
+        $row['late_hms'] = gmdate('H:i:s', $row['late_seconds']);
+    }
+
+    return $summary;
+}
 }
