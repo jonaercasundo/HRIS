@@ -1,157 +1,218 @@
 @extends('layouts.app_hr')
 
 @section('content')
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-    .custom-card {
-        border: none;
-        backdrop-filter: blur(10px);
-        background: rgba(255, 255, 255, 0.95);
+    /* Global modern UI reset inside component wrapper */
+    .dashboard-wrapper {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background-color: #f8fafc;
+        min-height: 100vh;
+        color: #334155;
     }
-    /* Enforce compact row height and crisp smaller fonts */
-    .table-compact th {
-        font-size: 0.725rem !important;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        padding-top: 6px !important;
-        padding-bottom: 6px !important;
+    
+    /* Modern minimalist surfaces */
+    .card-modern {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+        border-radius: 12px !important;
+        transition: box-shadow 0.2s ease;
     }
-    .table-compact td {
-        font-size: 0.775rem !important;
-        padding-top: 6px !important;
-        padding-bottom: 6px !important;
+    
+    /* Filter interactive surface states */
+    .form-input-modern {
+        font-size: 0.815rem !important;
+        font-weight: 500;
+        color: #1e293b;
+        background-color: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        transition: all 0.15s ease-in-out;
     }
-    /* Slim down form components */
-    .form-control-sm {
-        font-size: 0.775rem !important;
-        border-radius: 6px;
+    .form-input-modern:focus {
+        color: #0f172a;
+        background-color: #fff;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+        outline: 0;
     }
-    .label-xs {
-        font-size: 0.65rem !important;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        margin-bottom: 2px;
-        display: block;
+    
+    .input-icon-span {
+        border: 1px solid #cbd5e1;
+        border-right: none;
+        background-color: #f8fafc;
+        color: #64748b;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
     }
-    .btn-compact-primary {
-        background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);
-        color: white;
-        border: none;
-        font-size: 0.775rem !important;
-        padding: 4px 12px;
-        transition: opacity 0.2s;
+    .input-icon-span + .form-input-modern {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
     }
-    .btn-compact-primary:hover {
-        opacity: 0.9;
-        color: white;
-    }
-    .form-control:focus {
-        border-color: #5c60f5;
-        box-shadow: 0 0 0 0.25rem rgba(92, 96, 245, 0.15);
-    }
-    .badge-compact {
-        font-size: 0.675rem !important;
-        padding: 2.5px 6px;
+
+    /* Premium Accent Action Button */
+    .btn-action-primary {
+        background: #4f46e5;
+        color: #ffffff;
         font-weight: 600;
+        font-size: 0.815rem !important;
+        border: 1px solid #4338ca;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        transition: all 0.15s ease;
     }
-    .badge-late-alert {
-        background-color: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
+    .btn-action-primary:hover {
+        background: #4338ca;
+        color: #ffffff;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     }
-    .metric-gradient-card {
-        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-        border: none;
-    }
-    /* Ultra-Compact High Density Button Spec */
-    .btn-xs {
-        padding: 2px 6px !important;
+    
+    /* High density data tables matching Stripe/Linear style profiles */
+    .table-modern th {
         font-size: 0.725rem !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+        background-color: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 10px 16px !important;
+    }
+    .table-modern td {
+        font-size: 0.825rem !important;
+        color: #334155;
+        padding: 12px 16px !important;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .table-modern tr:hover td {
+        background-color: #f8fafc;
+    }
+
+    /* Micro Badges design syntax */
+    .badge-modern {
+        font-size: 0.725rem !important;
+        font-weight: 500;
+        padding: 3px 8px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .badge-modern-neutral {
+        background-color: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+    .badge-modern-danger {
+        background-color: #fef2f2;
+        color: #b91c1c;
+        border: 1px solid #fee2e2;
+    }
+    .badge-modern-success {
+        background-color: #f0fdf4;
+        color: #166534;
+        border: 1px solid #dcfce7;
+    }
+
+    /* Ultra compact micro control row buttons */
+    .btn-micro-action {
+        padding: 4px 10px !important;
+        font-size: 0.75rem !important;
         font-weight: 600 !important;
-        border-radius: 4px !important;
-        line-height: 1.2 !important;
+        border-radius: 6px !important;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
     }
 </style>
 
-<div class="container-fluid px-3 py-3">
-
-    <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="dashboard-wrapper px-4 py-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
         <div>
-            <h5 class="mb-0 fw-bold text-dark tracking-tight">Late Summary Report</h5>
-            <small class="text-muted" style="font-size: 0.7rem;"><i class="bi bi-file-earmark-bar-graph me-1"></i>Aggregated Exception Processing</small>
+            <h4 class="mb-1 fw-bold text-slate-900 tracking-tight" style="color: #0f172a;">Late Summary Report</h4>
+            <p class="text-muted mb-0 d-flex align-items-center gap-1.5" style="font-size: 0.8rem; color: #64748b;">
+                <i class="bi bi-shield-check text-indigo-600" style="color: #4f46e5;"></i> 
+                Aggregated core exception framework matrix parameters
+            </p>
         </div>
     </div>
 
-    <div class="card custom-card shadow-sm rounded-3 overflow-hidden mb-3">
-        <div class="card-body p-2.5 bg-white">
-            <form method="GET" action="{{ route('reports.late') }}" class="row g-2 align-items-end">
-                <div class="col-md-4 col-sm-6">
-                    <span class="label-xs text-uppercase text-muted">Temporal Window From</span>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted py-0"><i class="bi bi-calendar-event" style="font-size: 0.7rem;"></i></span>
-                        <input type="date" name="from" value="{{ $from ?? '' }}" class="form-control form-control-sm bg-light" required>
+    <div class="card card-modern mb-4">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ route('reports.late') }}" class="row g-3 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="label-xs text-uppercase text-muted fw-bold mb-1.5" style="font-size: 0.65rem; color: #64748b; letter-spacing: 0.05em;">Temporal Window From</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-icon-span px-2.5 py-0"><i class="bi bi-calendar4-event" style="font-size: 0.85rem;"></i></span>
+                        <input type="date" name="from" value="{{ $from ?? '' }}" class="form-control form-input-modern" required>
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-6">
-                    <span class="label-xs text-uppercase text-muted">Temporal Window To</span>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted py-0"><i class="bi bi-calendar-check" style="font-size: 0.7rem;"></i></span>
-                        <input type="date" name="to" value="{{ $to ?? '' }}" class="form-control form-control-sm bg-light" required>
+                <div class="col-12 col-md-4">
+                    <label class="label-xs text-uppercase text-muted fw-bold mb-1.5" style="font-size: 0.65rem; color: #64748b; letter-spacing: 0.05em;">Temporal Window To</label>
+                    <div class="input-group">
+                        <span class="input-group-text input-icon-span px-2.5 py-0"><i class="bi bi-calendar4-check" style="font-size: 0.85rem;"></i></span>
+                        <input type="date" name="to" value="{{ $to ?? '' }}" class="form-control form-input-modern" required>
                     </div>
                 </div>
 
-                <div class="col-md-4 col-sm-12">
-                    <button type="submit" class="btn btn-compact-primary w-100 rounded-2 shadow-sm d-flex align-items-center justify-content-center gap-1.5" style="height: 31px;">
-                        <i class="bi bi-lightning-charge-fill"></i> Compile Matrix
+                <div class="col-12 col-md-4">
+                    <button type="submit" class="btn btn-action-primary w-100 d-flex align-items-center justify-content-center gap-2 shadow-sm" style="height: 38px;">
+                        <i class="bi bi-arrow-clockwise"></i> Compile Matrix Data
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="card metric-gradient-card shadow-sm rounded-3 mb-3">
-        <div class="card-body p-3 d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-                <div class="p-2 bg-white bg-opacity-10 rounded-2 text-white-50">
-                    <i class="bi bi-clock-history fs-5"></i>
+    <div class="card card-modern mb-4 border-start border-4" style="border-left-color: #4f46e5 !important;">
+        <div class="card-body p-3.5 d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3">
+            <div class="d-flex align-items-start gap-3">
+                <div class="p-2.5 rounded-3 text-indigo-600 d-flex align-items-center justify-content-center" style="background-color: #eeebff; color: #4f46e5;">
+                    <i class="bi bi-hourglass-split fs-5"></i>
                 </div>
                 <div>
-                    <span class="text-white-50 text-uppercase d-block fw-bold tracking-wider" style="font-size: 0.65rem;">Total Late Accumulation</span>
-                    <small class="text-secondary" style="font-size: 0.7rem;">All corporate system identities combined</small>
+                    <span class="text-uppercase fw-bold tracking-wider d-block mb-0.5" style="font-size: 0.68rem; color: #64748b; letter-spacing: 0.05em;">Total Late Accumulation</span>
+                    <span class="text-secondary d-block" style="font-size: 0.775rem; color: #64748b;">Combined systemic chronological deficits across tracked profiles</span>
                 </div>
             </div>
-            <div class="text-end">
-                <span class="text-white fw-bold font-monospace fs-4 tracking-tight">
+            <div class="text-sm-end bg-light px-3 py-2 rounded-3 border border-slate-100">
+                <span class="fw-bold font-monospace text-slate-900 fs-4 tracking-tight" style="color: #0f172a;">
                     {{ $grandTotalLates ?? '00:00:00' }}
                 </span>
             </div>
         </div>
     </div>
 
-    <div class="card custom-card shadow-sm rounded-3 overflow-hidden">
+    <div class="card card-modern overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-compact table-hover align-middle mb-0">
-                    <thead class="table-light text-uppercase text-muted">
+                <table class="table table-modern align-middle mb-0">
+                    <thead>
                         <tr>
-                            <th class="ps-3">Employee No</th>
+                            <th class="ps-4">Employee ID</th>
                             <th>Employee Name</th>
-                            <th>Grace Period</th>
-                            <th>Total Late Calculation (HH:MM:SS)</th>
-                            <th>Late Frequency</th>
-                            <th>Half Day Count</th>
-                            <th class="pe-3 text-end">Actions</th>
+                            <th>Grace Parameter</th>
+                            <th>Calculated Delay (HH:MM:SS)</th>
+                            <th>Exception Count</th>
+                            <th>Half Day Allocation</th>
+                            <th class="pe-4 text-end">Operational Actions</th>
                         </tr>
                     </thead>
 
                     <tbody class="border-top-0">
                         @forelse($summary ?? [] as $row)
                             <tr>
-                                <td class="ps-3 fw-semibold text-dark font-monospace" style="font-size: 0.75rem;">{{ $row['employeeNo'] }}</td>
-                                <td class="text-dark fw-medium">{{ $row['employeeName'] }}</td>
+                                <td class="ps-4 fw-semibold font-monospace text-slate-700" style="color: #334155;">{{ $row['employeeNo'] }}</td>
+                                <td class="fw-medium text-slate-900" style="color: #0f172a;">{{ $row['employeeName'] }}</td>
                                 <td>
-                                    <span class="badge bg-light text-secondary border px-1.5 py-0.5 rounded-1 text-xs fw-normal">
-                                        {{ $row['gracePeriod'] }} mins
+                                    <span class="badge-modern badge-modern-neutral">
+                                        <i class="bi bi-clock-history opacity-70"></i> {{ $row['gracePeriod'] }}m
                                     </span>
                                 </td>
                                 <td>
@@ -160,38 +221,40 @@
                                         $parts = explode(':', $lateString);
                                     @endphp
 
-                                    <span class="badge badge-compact rounded-1 badge-late-alert" style="font-family: var(--bs-font-monospace, monospace); letter-spacing: -0.02em;">
-                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                    <span class="badge-modern badge-modern-danger font-monospace fw-semibold">
+                                        <i class="bi bi-exclamation-triangle"></i>
                                         {{ (int)($parts[0] ?? 0) }}h 
                                         {{ (int)($parts[1] ?? 0) }}m 
                                         {{ (int)($parts[2] ?? 0) }}s
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-light text-secondary border px-1.5 py-0.5 rounded-1 text-xs fw-normal">
-                                        {{ $row['late_count'] }} counts
+                                    <span class="badge-modern badge-modern-neutral">
+                                        {{ $row['late_count'] }} metrics
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-light text-dark border px-1.5 py-0.5 rounded-1 text-xs fw-semibold">
-                                        {{ $row['halfday_count'] }} half-days
+                                    <span class="badge-modern badge-modern-neutral fw-medium" style="background-color: #f8fafc;">
+                                        {{ $row['halfday_count'] }} periods
                                     </span>
                                 </td>
-                                <td class="pe-3 text-end">
-                                    <div class="d-inline-flex gap-1.5 align-items-center justify-content-end">
+                                <td class="pe-4 text-end">
+                                    <div class="d-inline-flex gap-2 align-items-center justify-content-end">
                                         @if(($row['late_count'] ?? 0) >= 5)
                                             <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
-                                               class="btn btn-outline-danger btn-xs d-inline-flex align-items-center gap-1 shadow-sm">
-                                                <i class="bi bi-download" style="font-size: 0.65rem;"></i>
-                                                <span>NTE</span>
+                                               class="btn btn-outline-danger btn-micro-action shadow-sm">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                                <span>Issue NTE</span>
                                             </a>
                                         @else
-                                            <span class="text-muted text-xs font-medium me-1" style="font-size: 0.7rem;"><i class="bi bi-check-circle-fill text-success me-1"></i>Compliant</span>
+                                            <span class="badge-modern badge-modern-success me-1">
+                                                <i class="bi bi-check2-circle"></i> Compliant
+                                            </span>
                                         @endif
                                         
-                                        <button type="button" class="btn btn-outline-primary btn-xs view-late d-inline-flex align-items-center gap-1" data-id="{{ $row['employeeNo'] }}">
-                                            <i class="bi bi-eye" style="font-size: 0.65rem;"></i>
-                                            <span>View</span>
+                                        <button type="button" class="btn btn-outline-secondary btn-micro-action text-slate-700 view-late" style="color: #475569;" data-id="{{ $row['employeeNo'] }}">
+                                            <i class="bi bi-eye"></i>
+                                            <span>Inspect</span>
                                         </button>
                                     </div>
                                 </td>
@@ -199,10 +262,12 @@
                         @empty
                             <tr>
                                 <td colspan="7" class="text-center py-5 text-muted bg-light border-0">
-                                    <div class="py-3">
-                                        <i class="bi bi-clipboard-x fs-3 text-muted mb-1 d-block"></i>
-                                        <p class="mb-0 fw-medium small">No punctual discrepancies tracked within this timeframe</p>
-                                        <small class="text-muted text-xs">Modify parameters above to recompute records.</small>
+                                    <div class="py-4">
+                                        <div class="p-3 bg-white d-inline-block rounded-circle shadow-sm border mb-3">
+                                            <i class="bi bi-folder-x fs-3 text-slate-400" style="color: #94a3b8;"></i>
+                                        </div>
+                                        <p class="mb-1 fw-semibold text-slate-800" style="color: #1e293b; font-size: 0.9rem;">No dynamic punctuality discrepancies tracked</p>
+                                        <small class="text-muted d-block" style="font-size: 0.775rem;">Modify configuration data bounds parameters above to recompute ledger matrices.</small>
                                     </div>
                                 </td>
                             </tr>
@@ -212,26 +277,30 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <div class="modal fade" id="lateModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-md">
-        <div class="modal-content shadow border-0 rounded-3">
-            <div class="modal-header bg-light py-2 px-3">
-                <h6 class="modal-title fw-bold text-dark">
-                    <i class="bi bi-clock-history me-1.5 text-primary"></i>Late Records: <span id="empNo" class="font-monospace text-primary"></span>
-                </h6>
-                <button type="button" class="btn-close style-none" style="font-size: 0.75rem;" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="modal-header bg-white py-3 px-3.5 border-bottom border-slate-100">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="p-1.5 rounded-2 text-indigo-600 bg-indigo-50" style="background-color: #f5f3ff; color: #4f46e5;">
+                        <i class="bi bi-activity" style="font-size: 0.9rem;"></i>
+                    </div>
+                    <h6 class="modal-title fw-bold text-slate-900 mb-0" style="color: #0f172a; font-size: 0.925rem;">
+                        Audit Log Trace: <span id="empNo" class="font-monospace text-indigo-600" style="color: #4f46e5;"></span>
+                    </h6>
+                </div>
+                <button type="button" class="btn-close shadow-none" style="font-size: 0.7rem;" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-compact table-striped align-middle mb-0" style="font-size: 0.75rem;">
-                        <thead class="table-light text-uppercase text-muted" style="font-size: 0.68rem;">
+                    <table class="table table-modern align-middle mb-0" style="font-size: 0.8rem;">
+                        <thead>
                             <tr>
-                                <th class="ps-3">Date</th>
-                                <th>Time In</th>
-                                <th class="pe-3 text-end">Late Duration</th>
+                                <th class="ps-3.5">Target Timestamp</th>
+                                <th>Inbound Core Punch</th>
+                                <th class="pe-3.5 text-end">Absolute Delay</th>
                             </tr>
                         </thead>
                         <tbody id="lateBody" class="border-top-0">
@@ -256,26 +325,34 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = new bootstrap.Modal(modalElement);
 
         document.getElementById('empNo').innerText = empNo;
-        document.getElementById('lateBody').innerHTML = `<tr><td colspan="3" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-1" role="status"></div> Loading...</td></tr>`;
+        document.getElementById('lateBody').innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center py-5 text-muted">
+                    <div class="spinner-border spinner-border-sm text-indigo-600 me-2" style="color: #4f46e5;" role="status"></div>
+                    <span style="font-size: 0.815rem; font-weight: 500;">Aggregating remote operational state telemetry...</span>
+                </td>
+            </tr>`;
         
         modal.show();
 
         fetch(`/reports/late/details/${empNo}?from={{ $from ?? '' }}&to={{ $to ?? '' }}`)
             .then(res => {
-                if (!res.ok) throw new Error('Network validation mismatch');
+                if (!res.ok) throw new Error('Dynamic validation mismatch');
                 return res.json();
             })
             .then(res => {
                 let rows = '';
                 if (!res.data || res.data.length === 0) {
-                    rows = `<tr><td colspan="3" class="text-center py-4 text-muted small fw-medium">No chronological exceptions logged.</td></tr>`;
+                    rows = `<tr><td colspan="3" class="text-center py-4 text-muted small fw-medium">No system log history exceptions compiled.</td></tr>`;
                 } else {
                     res.data.forEach(item => {
                         rows += `
                             <tr>
-                                <td class="ps-3 fw-medium text-dark">${item.date}</td>
-                                <td class="font-monospace">${item.time}</td>
-                                <td class="pe-3 text-end"><span class="badge badge-late-alert font-monospace px-1.5 py-0.5 rounded-1">${item.late}</span></td>
+                                <td class="ps-3.5 fw-medium text-slate-800" style="color: #1e293b;">${item.date}</td>
+                                <td class="font-monospace text-slate-600" style="color: #475569;">${item.time}</td>
+                                <td class="pe-3.5 text-end">
+                                    <span class="badge-modern badge-modern-danger font-monospace px-2 py-0.5">${item.late}</span>
+                                </td>
                             </tr>
                         `;
                     });
@@ -283,7 +360,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('lateBody').innerHTML = rows;
             })
             .catch(err => {
-                document.getElementById('lateBody').innerHTML = `<tr><td colspan="3" class="text-danger text-center py-4 small fw-medium"><i class="bi bi-exclamation-triangle-fill me-1"></i> Failed to aggregate exception records.</td></tr>`;
+                document.getElementById('lateBody').innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-danger text-center py-4 small fw-medium">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Failed to aggregate transaction timeline exceptions.
+                        </td>
+                    </tr>`;
             });
     });
 });
