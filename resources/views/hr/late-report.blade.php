@@ -178,20 +178,22 @@
                                     </span>
                                 </td>
                                 <td class="pe-3 text-end">
-                                    @if(($row['late_seconds'] ?? 0) >= 14400)
-                                        <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
-                                           class="btn btn-outline-danger btn-xs d-inline-flex align-items-center gap-1 shadow-sm">
-                                            <i class="bi bi-download" style="font-size: 0.65rem;"></i>
-                                            <span>NTE</span>
-                                        </a>
-                                    @else
-                                        <span class="text-muted text-xs font-medium" style="font-size: 0.7rem;"><i class="bi bi-check-circle-fill text-success me-1"></i>Compliant</span>
-                                    @endif
-                                    <button type="button"
-                                            class="btn btn-primary btn-xs view-late"
-                                            data-id="{{ $row['employeeNo'] }}">
-                                        View
-                                    </button>
+                                    <div class="d-inline-flex gap-1.5 align-items-center justify-content-end">
+                                        @if(($row['late_seconds'] ?? 0) >= 14400)
+                                            <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
+                                               class="btn btn-outline-danger btn-xs d-inline-flex align-items-center gap-1 shadow-sm">
+                                                <i class="bi bi-download" style="font-size: 0.65rem;"></i>
+                                                <span>NTE</span>
+                                            </a>
+                                        @else
+                                            <span class="text-muted text-xs font-medium me-1" style="font-size: 0.7rem;"><i class="bi bi-check-circle-fill text-success me-1"></i>Compliant</span>
+                                        @endif
+                                        
+                                        <button type="button" class="btn btn-outline-primary btn-xs view-late d-inline-flex align-items-center gap-1" data-id="{{ $row['employeeNo'] }}">
+                                            <i class="bi bi-eye" style="font-size: 0.65rem;"></i>
+                                            <span>View</span>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
@@ -210,80 +212,79 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="lateModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
 
-        <div class="modal-header">
-            <h5 class="modal-title">
-                Late Details
-                <span class="text-muted">({{ $from }} → {{ $to }})</span>
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
+</div>
 
-        <div class="modal-body">
-            <table class="table table-bordered">
-            <thead>
-                <tr>
-                <th>Date</th>
-                <th>Time In</th>
-                <th>Late Duration</th>
-                </tr>
-            </thead>
-            <tbody id="lateBody"></tbody>
-            </table>
+<div class="modal fade" id="lateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content shadow border-0 rounded-3">
+            <div class="modal-header bg-light py-2 px-3">
+                <h6 class="modal-title fw-bold text-dark">
+                    <i class="bi bi-clock-history me-1.5 text-primary"></i>Late Records: <span id="empNo" class="font-monospace text-primary"></span>
+                </h6>
+                <button type="button" class="btn-close style-none" style="font-size: 0.75rem;" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-compact table-striped align-middle mb-0" style="font-size: 0.75rem;">
+                        <thead class="table-light text-uppercase text-muted" style="font-size: 0.68rem;">
+                            <tr>
+                                <th class="ps-3">Date</th>
+                                <th>Time In</th>
+                                <th class="pe-3 text-end">Late Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lateBody" class="border-top-0">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-
-        </div>
-    </div>
     </div>
 </div>
+
 @endsection
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function (e) {
+        let btn = e.target.closest('.view-late');
+        if (!btn) return;
 
-    const modal = new bootstrap.Modal(document.getElementById('lateModal'));
+        let empNo = btn.getAttribute('data-id');
+        const modalElement = document.getElementById('lateModal');
+        const modal = new bootstrap.Modal(modalElement);
 
-    document.querySelectorAll('.view-late').forEach(button => {
-        button.addEventListener('click', function () {
+        document.getElementById('empNo').innerText = empNo;
+        document.getElementById('lateBody').innerHTML = `<tr><td colspan="3" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-1" role="status"></div> Loading...</td></tr>`;
+        
+        modal.show();
 
-            let empNo = this.getAttribute('data-id');
-
-            document.getElementById('empNo').innerText = empNo;
-            document.getElementById('lateBody').innerHTML =
-                `<tr><td colspan="3" class="text-center">Loading...</td></tr>`;
-
-            fetch(`/reports/late/details/${empNo}?from={{ $from }}&to={{ $to }}`)
-                .then(res => res.json())
-                .then(res => {
-
-                    let rows = '';
-
-                    if (!res.data || res.data.length === 0) {
-                        rows = `<tr><td colspan="3" class="text-center">No late records</td></tr>`;
-                    } else {
-                        res.data.forEach(item => {
-                            rows += `
-                                <tr>
-                                    <td>${item.date}</td>
-                                    <td>${item.time}</td>
-                                    <td>${item.late}</td>
-                                </tr>
-                            `;
-                        });
-                    }
-
-                    document.getElementById('lateBody').innerHTML = rows;
-                    modal.show();
-                })
-                .catch(err => {
-                    document.getElementById('lateBody').innerHTML =
-                        `<tr><td colspan="3" class="text-danger text-center">Error loading data</td></tr>`;
-                    modal.show();
-                });
-        });
+        fetch(`/reports/late/details/${empNo}?from={{ $from ?? '' }}&to={{ $to ?? '' }}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Network validation mismatch');
+                return res.json();
+            })
+            .then(res => {
+                let rows = '';
+                if (!res.data || res.data.length === 0) {
+                    rows = `<tr><td colspan="3" class="text-center py-4 text-muted small fw-medium">No chronological exceptions logged.</td></tr>`;
+                } else {
+                    res.data.forEach(item => {
+                        rows += `
+                            <tr>
+                                <td class="ps-3 fw-medium text-dark">${item.date}</td>
+                                <td class="font-monospace">${item.time}</td>
+                                <td class="pe-3 text-end"><span class="badge badge-late-alert font-monospace px-1.5 py-0.5 rounded-1">${item.late}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+                document.getElementById('lateBody').innerHTML = rows;
+            })
+            .catch(err => {
+                document.getElementById('lateBody').innerHTML = `<tr><td colspan="3" class="text-danger text-center py-4 small fw-medium"><i class="bi bi-exclamation-triangle-fill me-1"></i> Failed to aggregate exception records.</td></tr>`;
+            });
     });
-
 });
 </script>

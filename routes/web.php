@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/reports/filter', [ReportController::class, 'filter']);
         Route::get('/reports/nte/{employeeNo}', [ReportController::class, 'generateNTE']);
         Route::get('/reports/late/details/{employeeNo}', [ReportController::class, 'lateDetails']);
+        
     });
 
     /*
