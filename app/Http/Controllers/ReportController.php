@@ -358,30 +358,37 @@ private function buildLateSummary($logs)
         $isHalfDay = $this->isHalfDayByTime($log->time_log);
 
         // =========================
-        // ONLY CHECK IF LATE (NO SECONDS)
+        // COMPUTE LATE SECONDS (FOR REPORT ONLY)
         // =========================
-        $isLate = false;
+        $lateSeconds = 0;
 
         if (!$isHalfDay) {
-            $start = strtotime('08:00:00');
-            $grace = $start + (self::GRACE_MINUTES * 60);
-
-            $isLate = $timeIn > $grace;
+            $lateSeconds = $this->calculateLateSecondsDynamic(
+                $log->time_log,
+                self::GRACE_MINUTES
+            );
         }
 
         if ($isHalfDay) {
             $halfStart = strtotime('12:00:00');
             $halfGraceEnd = $halfStart + (90 * 60);
 
-            $isLate = $timeIn > $halfGraceEnd;
+            if ($timeIn > $halfGraceEnd) {
+                $lateSeconds = $timeIn - $halfGraceEnd;
+            }
         }
 
+        // =========================
+        // INIT
+        // =========================
         if (!isset($summary[$emp])) {
             $summary[$emp] = [
                 'employeeNo'    => $emp,
                 'employeeName'  => $log->employeeName ?? 'N/A',
-                'late_count'    => 0,   // ✅ ONLY THIS MATTERS
+                'late_seconds'  => 0,   // ✔ KEEP (REPORTING)
+                'late_count'    => 0,   // ✔ NTE BASIS
                 'halfday_count' => 0,
+                'gracePeriod'   => self::GRACE_MINUTES,
             ];
         }
 
@@ -390,18 +397,27 @@ private function buildLateSummary($logs)
         }
 
         // =========================
-        // FREQUENCY ONLY (1 PER DAY)
+        // FREQUENCY (NTE RULE)
         // =========================
-        if ($isLate) {
+        if ($lateSeconds > 0) {
 
             $dayKey = $emp . '_' . $date;
 
             if (!isset($lateDaysTracker[$dayKey])) {
                 $lateDaysTracker[$dayKey] = true;
-
-                $summary[$emp]['late_count']++;
+                $summary[$emp]['late_count']++; // ONLY ONCE PER DAY
             }
+
+            // =========================
+            // TIME TOTAL (REPORTING ONLY)
+            // =========================
+            $summary[$emp]['late_seconds'] += $lateSeconds;
         }
+    }
+
+    // format for UI
+    foreach ($summary as &$row) {
+        $row['late_hms'] = gmdate('H:i:s', $row['late_seconds']);
     }
 
     return $summary;
