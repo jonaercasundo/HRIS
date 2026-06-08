@@ -268,13 +268,33 @@ class ReportController extends Controller
             'to' => $request->to
         ]);
     }
+    private function isWorkingDay($date)
+    {
+        $dayOfWeek = date('N', strtotime($date)); 
+        // 6 = Saturday, 7 = Sunday
+
+        if ($dayOfWeek >= 6) {
+            return false;
+        }
+
+        // OPTIONAL: holiday check (table-based)
+        $isHoliday = DB::table('holidays')
+            ->where('holiday_date', $date)
+            ->exists();
+
+        if ($isHoliday) {
+            return false;
+        }
+
+        return true;
+    }
     private function buildLateSummary($logs)
     {
         $summary = [];
 
         foreach ($logs as $log) {
 
-            if (!$log->employee_no || !$log->time_log) {
+            if (!$log->employee_no || !$log->time_log || !$log->date_log) {
                 continue;
             }
 
@@ -282,10 +302,15 @@ class ReportController extends Controller
                 continue;
             }
 
+            // 🚫 SKIP WEEKENDS + HOLIDAYS
+            if (!$this->isWorkingDay($log->date_log)) {
+                continue;
+            }
+
             $lateSeconds = $this->calculateLateSeconds($log->time_log);
 
             if ($lateSeconds <= 0) {
-                continue; // only count actual late logs
+                continue;
             }
 
             $key = trim($log->employee_no);
@@ -296,21 +321,15 @@ class ReportController extends Controller
                     'employeeName'  => $log->employeeName ?? 'N/A',
                     'gracePeriod'   => self::GRACE_MINUTES,
                     'late_seconds'  => 0,
-                    'late_count'    => 0, // 👈 ADD THIS
+                    'late_count'    => 0,
                 ];
             }
 
             $summary[$key]['late_seconds'] += $lateSeconds;
-            $summary[$key]['late_count']++; // 👈 INCREMENT FREQUENCY
+            $summary[$key]['late_count']++;
         }
 
         foreach ($summary as $key => &$row) {
-
-            if ($row['late_seconds'] <= 0) {
-                unset($summary[$key]);
-                continue;
-            }
-
             $row['late_hms'] = gmdate('H:i:s', $row['late_seconds']);
         }
 
