@@ -17,41 +17,42 @@ class InfobipViberService
         $this->sender  = config('services.infobip.sender');
     }
 
- public function send(string $mobile, string $message)
-{
-    try {
-        $response = Http::withOptions([
-            'verify' => storage_path('cacert.pem'),
-        ])->withHeaders([
-            'Authorization' => 'App ' . $this->apiKey,
-            'Content-Type'  => 'application/json',
-            'Accept'        => 'application/json',
-        ])->post($this->baseUrl . '/viber/2/messages', [
-            'messages' => [
-                [
-                    'sender' => $this->sender,
-                    'destinations' => [
-                        ['to' => $mobile]
-                    ],
-                    'content' => [
-                        'type' => 'TEXT',
-                        'text' => $message
+    public function send(string $mobile, string $message)
+    {
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => 'App ' . $this->apiKey,
+                'Content-Type'  => 'application/json',
+                'Accept'        => 'application/json',
+            ])->post($this->baseUrl . '/messages-api/1/messages', [
+                'messages' => [
+                    [
+                        'from' => $this->sender,
+
+                        'destinations' => [
+                            [
+                                'to' => $mobile
+                            ]
+                        ],
+
+                        'content' => [
+                            'text' => $message
+                        ]
                     ]
                 ]
-            ]
-        ]);
+            ]);
 
-        return [
-            'status' => $response->successful() ? 'OK' : 'FAILED',
-            'code'   => $response->status(),
-            'body'   => $response->json()
-        ];
+            return [
+                'status' => $response->successful() ? 'OK' : 'FAILED',
+                'code'   => $response->status(),
+                'body'   => $response->json()
+            ];
 
-    } catch (\Exception $e) {
-        return [
-            'status' => 'ERROR',
-            'message' => $e->getMessage()
-        ];
+        } catch (\Exception $e) {
+            return [
+                'status' => 'ERROR',
+                'message' => $e->getMessage()
+            ];
+        }
     }
-}
 }
