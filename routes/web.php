@@ -101,7 +101,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/viber/send', [ViberController::class, 'send']);
         });
         Route::get('/viber-test', function () {
-         return view('top_management.viber-test');
+         return view('viber_business_messages.configuration');
     });
     /*
     |-------------------------
