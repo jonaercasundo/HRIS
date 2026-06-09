@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class InfobipViberService
 {
@@ -12,50 +13,71 @@ class InfobipViberService
 
     public function __construct()
     {
-        $this->baseUrl = config('services.infobip.base_url');
+        $this->baseUrl = rtrim(config('services.infobip.base_url'), '/');
         $this->apiKey  = config('services.infobip.api_key');
         $this->sender  = config('services.infobip.sender');
     }
 
-    public function send(string $mobile, string $message)
+    public function send(string $mobile, string $message): array
     {
         try {
-            $response = Http::withOptions([
-                'verify' => storage_path('ssl/cacert.pem'),
-            ])
-            ->withHeaders([ 
-                'Authorization' => 'App ' . $this->apiKey,
-                'Content-Type'  => 'application/json',
-                'Accept'        => 'application/json',
-            ])
-            ->post($this->baseUrl . '/messages-api/1/messages', [
-                'messages' => [
-                    [
-                        'from' => $this->sender,
-
-                        'destinations' => [
-                            [
-                                'to' => $mobile
+            $response = Http::timeout(10)
+                ->retry(2, 500)
+                ->withHeaders([
+                    'Authorization' => 'App ' . $this->apiKey,
+                    'Accept'        => 'application/json',
+                    'Content-Type'  => 'application/json',
+                ])
+                ->post($this->baseUrl . '/messages-api/1/messages', [
+                    'messages' => [
+                        [
+                            'from' => $this->sender,
+                            'destinations' => [
+                                [
+                                    'to' => $mobile
+                                ]
+                            ],
+                            'content' => [
+                                'type' => 'TEXT',
+                                'text' => $message
                             ]
-                        ],
-
-                        'content' => [
-                            'type' => 'TEXT',
-                            'text' => $message
                         ]
                     ]
-                ]
-            ]);
-            return [
-                'status' => $response->successful() ? 'OK' : 'FAILED',
-                'code'   => $response->status(),
-                'body'   => $response->json()
+                ]);
+
+            $result = [
+                'status' => $response->successful() ? 'SUCCESS' : 'FAILED',
+                'http_code' => $response->status(),
+                'response' => $response->json(),
             ];
 
-        } catch (\Exception $e) {
+            // Log everything for SAP audit / debugging
+            Log::info('Infobip Viber Response', [
+                'mobile' => $mobile,
+                'status' => $result['status'],
+                'http_code' => $result['http_code'],
+            ]);
+
+            if (!$response->successful()) {
+                Log::warning('Infobip Viber failed request', [
+                    'mobile' => $mobile,
+                    'body' => $response->body(),
+                ]);
+            }
+
+            return $result;
+
+        } catch (\Throwable $e) {
+
+            Log::error('Infobip Viber exception', [
+                'mobile' => $mobile,
+                'error' => $e->getMessage(),
+            ]);
+
             return [
                 'status' => 'ERROR',
-                'message' => $e->getMessage()
+                'http_code' => 500,
+                'message' => $e->getMessage(),
             ];
         }
     }

@@ -1,33 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SAP → Viber Business Messages Gateway</title>
+    <title>SAP → Viber Business Messaging Gateway</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
         body {
-            background: linear-gradient(135deg, #f4f6f9, #e9eef5);
+            background: #f5f7fb;
         }
 
-        .header-banner {
-            background: #2c3e50;
+        .top-header {
+            background: #1f2a44;
             color: white;
-            padding: 18px;
-            border-radius: 10px;
+            padding: 20px;
+            border-radius: 12px;
         }
 
-        .badge-status {
-            font-size: 12px;
-        }
-
-        .message-box {
-            resize: none;
-        }
-
-        .counter {
-            font-size: 12px;
-            float: right;
+        .status-bar {
+            font-size: 14px;
         }
 
         .card {
@@ -35,13 +26,45 @@
             border-radius: 12px;
         }
 
+        .label-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .counter {
+            font-size: 12px;
+            float: right;
+        }
+
+        textarea {
+            resize: none;
+        }
+
+        .preview-box {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 10px;
+            min-height: 180px;
+            white-space: pre-wrap;
+        }
+
         .btn-primary {
-            background: #6c5ce7;
+            background: #4f46e5;
             border: none;
         }
 
         .btn-primary:hover {
-            background: #5a4bd6;
+            background: #4338ca;
+        }
+
+        .badge-sap {
+            background: #0ea5e9;
+        }
+
+        .badge-viber {
+            background: #8b5cf6;
         }
     </style>
 </head>
@@ -51,17 +74,17 @@
 <div class="container mt-4">
 
     <!-- HEADER -->
-    <div class="header-banner mb-4 shadow-sm">
-        <h4 class="mb-1">SAP → Viber Business Messages</h4>
-        <small>Enterprise Messaging Gateway for Metro-Mobilia</small>
+    <div class="top-header shadow-sm mb-4">
+        <h4 class="mb-1">SAP → Viber Business Messaging Gateway</h4>
+        <small>Enterprise Integration Layer (SAP Events → Infobip Viber API)</small>
     </div>
 
     <!-- STATUS -->
-    <div class="alert alert-warning">
-        Sender Status: <strong>Pending Approval</strong> (Viber Business Sender)
+    <div class="alert alert-warning status-bar">
+        <strong>Sender Status:</strong> Pending Approval (Viber Business Sender)
     </div>
 
-    <!-- SUCCESS MESSAGE -->
+    <!-- SUCCESS -->
     @if(session('success'))
         <div class="alert alert-success">
             {{ session('success') }}
@@ -69,11 +92,13 @@
     @endif
 
     <div class="row">
+
         <!-- FORM -->
         <div class="col-md-7">
-            <div class="card shadow-sm">
+
+            <div class="card shadow-sm mb-3">
                 <div class="card-header bg-primary text-white">
-                    Send Viber Business Message
+                    SAP Event Trigger Input
                 </div>
 
                 <div class="card-body">
@@ -83,66 +108,93 @@
 
                         <!-- MOBILE -->
                         <div class="mb-3">
-                            <label class="form-label">Recipient Mobile (E.164)</label>
-                            <input type="text" name="mobile" class="form-control"
-                                   placeholder="639171234567" required>
-                            <small class="text-muted">Must include country code (PH: 63)</small>
+                            <label class="label-title">Recipient Mobile (E.164 Format)</label>
+                            <input type="text"
+                                   name="mobile"
+                                   class="form-control"
+                                   placeholder="639171234567"
+                                   required>
+                            <small class="text-muted">
+                                Example: 63 + 9XXXXXXXXX
+                            </small>
+                        </div>
+
+                        <!-- SAP EVENT TYPE -->
+                        <div class="mb-3">
+                            <label class="label-title">SAP Event Type</label>
+                            <select name="event_type" class="form-control">
+                                <option value="SALES_ORDER">Sales Order</option>
+                                <option value="PAYMENT">Payment</option>
+                                <option value="DELIVERY">Delivery</option>
+                                <option value="INVENTORY">Inventory</option>
+                                <option value="CUSTOM">Custom Message</option>
+                            </select>
                         </div>
 
                         <!-- MESSAGE -->
                         <div class="mb-3">
-                            <label class="form-label">Message Content</label>
+                            <label class="label-title">Message Payload</label>
 
-                            <textarea name="message" id="message"
-                                      class="form-control message-box"
-                                      rows="7" required maxlength="1000">Hello from Metro-Mobilia!
+                            <textarea name="message"
+                                      id="message"
+                                      class="form-control"
+                                      rows="6"
+                                      maxlength="1000"
+                                      required>Order update from SAP:
 
-This message is sent via SAP integration → Viber Business Messages.
+Your transaction has been processed successfully.
 
-We provide premium furniture solutions for homes, offices, and commercial projects.
-
-Thank you.</textarea>
+Thank you for trusting Metro-Mobilia.</textarea>
 
                             <span class="counter text-muted">
                                 <span id="charCount">0</span>/1000
                             </span>
                         </div>
 
-                        <!-- BUTTON -->
                         <button type="submit" class="btn btn-primary w-100" id="sendBtn">
-                            Send via Viber Business Messages
+                            Send to Viber via Infobip
                         </button>
 
                     </form>
+
                 </div>
             </div>
+
         </div>
 
-        <!-- PREVIEW PANEL -->
+        <!-- PREVIEW -->
         <div class="col-md-5">
-            <div class="card shadow-sm">
+
+            <div class="card shadow-sm mb-3">
                 <div class="card-header bg-dark text-white">
-                    Message Preview
+                    Live Message Preview
                 </div>
+
                 <div class="card-body">
-                    <pre id="preview" style="white-space: pre-wrap;"></pre>
+                    <div id="preview" class="preview-box"></div>
                 </div>
             </div>
 
-            <div class="card shadow-sm mt-3">
+            <div class="card shadow-sm">
                 <div class="card-header">
-                    SAP Integration Notes
+                    Integration Flow
                 </div>
-                <div class="card-body">
-                    <ul class="small">
-                        <li>Source: SAP Sales / CRM Module</li>
-                        <li>Trigger: Order / Notification Event</li>
-                        <li>Channel: Viber Business Messages</li>
-                        <li>Status Tracking: Pending / Sent / Failed</li>
-                    </ul>
+
+                <div class="card-body small">
+                    <span class="badge badge-sap">SAP</span> Event Trigger<br><br>
+                    ↓<br><br>
+                    Laravel Middleware API<br><br>
+                    ↓<br><br>
+                    Queue Job (Retry Enabled)<br><br>
+                    ↓<br><br>
+                    <span class="badge badge-viber">Infobip Viber API</span><br><br>
+                    ↓<br><br>
+                    End User Viber App
                 </div>
             </div>
+
         </div>
+
     </div>
 </div>
 
@@ -162,7 +214,7 @@ Thank you.</textarea>
 
     document.getElementById('viberForm').addEventListener('submit', function () {
         sendBtn.disabled = true;
-        sendBtn.innerText = "Sending...";
+        sendBtn.innerText = "Sending to Viber...";
     });
 </script>
 
