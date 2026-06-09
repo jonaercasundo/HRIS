@@ -21,30 +21,31 @@ class InfobipViberService
     {
         try {
             $response = Http::withOptions([
-    'verify' => storage_path('ssl/cacert.pem'),
-])->withHeaders([
-    'Authorization' => 'App ' . $this->apiKey,
-    'Content-Type'  => 'application/json',
-    'Accept'        => 'application/json',
-])->post($this->baseUrl . '/messages-api/1/messages', [
-    'messages' => [
-        [
-            'from' => 'IBSelfServe',
+                'verify' => storage_path('cacert.pem'),
+            ])
+            ->withHeaders([ 
+                'Authorization' => 'App ' . $this->apiKey,
+                'Content-Type'  => 'application/json',
+                'Accept'        => 'application/json',
+            ])
+            ->post($this->baseUrl . '/messages-api/1/messages', [
+                'messages' => [
+                    [
+                        'from' => $this->sender,
 
-            'destinations' => [
-                [
-                    'to' => '639XXXXXXXXX'
+                        'destinations' => [
+                            [
+                                'to' => $mobile
+                            ]
+                        ],
+
+                        'content' => [
+                            'type' => 'TEXT',
+                            'text' => $message
+                        ]
+                    ]
                 ]
-            ],
-
-            'content' => [
-                'type' => 'TEXT',
-                'text' => $message
-            ]
-        ]
-    ]
-]);
-
+            ]);
             return [
                 'status' => $response->successful() ? 'OK' : 'FAILED',
                 'code'   => $response->status(),
