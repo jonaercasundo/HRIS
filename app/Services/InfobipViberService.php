@@ -21,7 +21,7 @@ class InfobipViberService
     {
         try {
             $response = Http::withOptions([
-                'verify' => storage_path('cacert.pem'),
+                'verify' => storage_path('ssl/cacert.pem'),
             ])
             ->withHeaders([ 
                 'Authorization' => 'App ' . $this->apiKey,
