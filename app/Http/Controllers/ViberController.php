@@ -19,6 +19,11 @@ class ViberController extends Controller
             $request->message
         );
 
-        return back()->with('success', 'Message sent successfully!');
+        // 🔥 CHECK RESULT
+        if (isset($response['status']) && $response['status'] === 'FAILED') {
+            return back()->with('error', 'Message failed to send. Check logs.');
+        }
+
+        return back()->with('success', 'Message sent to Infobip successfully!');
     }
 }
