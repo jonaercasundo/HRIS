@@ -9,21 +9,8 @@ class ViberController extends Controller
 {
     public function send(Request $request, InfobipViberService $viber)
 {
-    $request->validate([
-        'mobile' => 'required',
-        'message' => 'required'
-    ]);
+    $response = $viber->send($request->mobile, $request->message);
 
-    try {
-        $response = $viber->send(
-            $request->mobile,
-            $request->message
-        );
-
-        dd($response); // 🔥 TEMP DEBUG (IMPORTANT)
-
-    } catch (\Exception $e) {
-        dd($e->getMessage()); // 🔥 SHOW REAL ERROR
-    }
+    dd($response);
 }
 }
