@@ -8,9 +8,17 @@ use App\Services\InfobipViberService;
 class ViberController extends Controller
 {
     public function send(Request $request, InfobipViberService $viber)
-{
-    $response = $viber->send($request->mobile, $request->message);
+    {
+        $request->validate([
+            'mobile' => 'required',
+            'message' => 'required'
+        ]);
 
-    dd($response);
-}
+        $response = $viber->send(
+            $request->mobile,
+            $request->message
+        );
+
+        dd($response);
+    }
 }
