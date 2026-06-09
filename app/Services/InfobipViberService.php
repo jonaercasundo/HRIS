@@ -38,6 +38,7 @@ class InfobipViberService
                         ],
 
                         'content' => [
+                            'type' => 'TEXT',
                             'text' => $message
                         ]
                     ]
