@@ -29,5 +29,10 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
+    'infobip' => [
+        'base_url' => env('INFOBIP_BASE_URL'),
+        'api_key'  => env('INFOBIP_API_KEY'),
+        'sender'   => env('INFOBIP_VIBER_SENDER'),
+    ],
 
 ];

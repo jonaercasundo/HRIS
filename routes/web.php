@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\BiometricsController;
 use App\Http\Controllers\hr\Employee201Controller;
+use App\Http\Controllers\ViberController;
 
 
 /*
@@ -96,6 +97,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
         Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
         Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+
+        Route::post('/viber/send', [ViberController::class, 'send']);
+        });
+        Route::get('/viber-test', function () {
+         return view('top_management.viber-test');
     });
     /*
     |-------------------------
@@ -107,4 +113,5 @@ Route::middleware('auth')->group(function () {
             return view('employee.dashboard');
         });
     });
+
 });
