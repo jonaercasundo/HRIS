@@ -20,8 +20,9 @@ class InfobipViberService
     public function send(string $mobile, string $message)
     {
         try {
-            $response = Http::withHeaders([
+            $response = Http::withOptions([
                 'verify' => storage_path('ssl/cacert.pem'),
+            ])->withHeaders([
                 'Authorization' => 'App ' . $this->apiKey,
                 'Content-Type'  => 'application/json',
                 'Accept'        => 'application/json',
