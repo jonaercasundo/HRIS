@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class InfobipViberService
 {
@@ -24,13 +23,22 @@ class InfobipViberService
             'verify' => storage_path('cacert.pem'),
         ])->withHeaders([
             'Authorization' => 'App ' . $this->apiKey,
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
-        ])->post($this->baseUrl . '/messages-api/1/messages', [
-            'from' => $this->sender,
-            'to' => $mobile,
-            'content' => [
-                'text' => $message
+            'Content-Type'  => 'application/json',
+            'Accept'        => 'application/json',
+        ])->post($this->baseUrl . '/viber/2/messages', [
+            'messages' => [
+                [
+                    'sender' => $this->sender,
+                    'destinations' => [
+                        [
+                            'to' => $mobile
+                        ]
+                    ],
+                    'content' => [
+                        'type' => 'TEXT',
+                        'text' => $message
+                    ]
+                ]
             ]
         ]);
 
