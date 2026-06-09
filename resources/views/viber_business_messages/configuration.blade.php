@@ -42,152 +42,110 @@
     .badge-sap { background: #0ea5e9; }
     .badge-viber { background: #8b5cf6; }
     .badge-api { background: #10b981; }
+    .badge-layer { background: #f59e0b; }
 </style>
 
 <div class="container mt-4">
 
     <!-- HEADER -->
     <div class="header shadow-sm mb-4">
-        <h4 class="mb-1">SAP → Viber Business Messages Integration</h4>
-        <small>Enterprise Middleware Configuration Console (SAP → Laravel → Infobip)</small>
+        <h4 class="mb-1">SAP ↔ Laravel Middleware ↔ Infobip Viber Integration</h4>
+        <small>Enterprise Communication Architecture & Configuration Console</small>
     </div>
 
     <div class="row">
 
-        <!-- LEFT SIDE -->
-        <div class="col-md-8">
+        <!-- LEFT SIDE: SAP CONFIG -->
+        <div class="col-md-6">
 
-            <!-- SAP CONFIG -->
             <div class="card shadow-sm mb-3">
                 <div class="card-header bg-primary text-white">
-                    SAP Connection Configuration
+                    SAP Configuration (Inbound System)
                 </div>
 
                 <div class="card-body">
 
-                    <div class="section-title">HTTP Destination (SAP SM59 / CPI)</div>
+                    <div class="section-title">1. SAP HTTP Destination (SM59 / CPI)</div>
                     <div class="config-box">
                         Method: HTTPS POST <br>
-                        Endpoint: https://your-domain.com/api/sap/viber/send <br>
-                        Port: 443 <br>
-                        SSL: ENABLED
+                        Target: Laravel API Gateway <br>
+                        Endpoint: /api/sap/viber/send <br>
+                        Port: 443 (SSL Enabled)
                     </div>
 
-                    <hr>
+                    <br>
 
-                    <div class="section-title">Authentication</div>
+                    <div class="section-title">2. SAP Event Triggers</div>
                     <div class="config-box">
-                        Type: API Token <br>
-                        Header: X-SAP-TOKEN <br>
-                        Status: Secured
+                        SALES_ORDER_CREATED → Order Confirmation <br>
+                        PAYMENT_RECEIVED → Payment Notification <br>
+                        DELIVERY_DISPATCHED → Delivery Update
+                    </div>
+
+                    <br>
+
+                    <div class="section-title">3. SAP Payload Structure</div>
+                    <div class="config-box">
+                        {
+                            mobile, <br>
+                            event_type, <br>
+                            reference_no, <br>
+                            customer_data, <br>
+                            message
+                        }
                     </div>
 
                     <p class="small-note mt-2">
-                        SAP triggers this endpoint via ABAP, CPI, or workflow event.
+                        SAP sends business events via ABAP, CPI, or workflow triggers.
                     </p>
-
-                </div>
-            </div>
-
-            <!-- EVENT MAPPING -->
-            <div class="card shadow-sm mb-3">
-                <div class="card-header bg-dark text-white">
-                    SAP Event → Viber Mapping
-                </div>
-
-                <div class="card-body">
-
-                    <div class="section-title">Sales Order Event</div>
-                    <div class="config-box">
-                        Event: SALES_ORDER_CREATED <br>
-                        Message: Order {SO_NUMBER} has been confirmed.
-                    </div>
-
-                    <br>
-
-                    <div class="section-title">Payment Event</div>
-                    <div class="config-box">
-                        Event: PAYMENT_RECEIVED <br>
-                        Message: Payment for Invoice {INV_NO} has been received.
-                    </div>
-
-                    <br>
-
-                    <div class="section-title">Delivery Event</div>
-                    <div class="config-box">
-                        Event: DELIVERY_DISPATCHED <br>
-                        Message: Order {SO_NUMBER} is out for delivery.
-                    </div>
 
                 </div>
             </div>
 
         </div>
 
-        <!-- RIGHT SIDE -->
-        <div class="col-md-4">
+        <!-- RIGHT SIDE: INFIBIP CONFIG -->
+        <div class="col-md-6">
 
-            <!-- VIBER CONFIG -->
             <div class="card shadow-sm mb-3">
                 <div class="card-header" style="background:#6d28d9;color:white;">
-                    Viber (Infobip) Configuration
+                    Infobip Viber Configuration (Outbound System)
                 </div>
 
                 <div class="card-body">
 
-                    <div class="section-title">API Endpoint</div>
+                    <div class="section-title">1. API Endpoint</div>
                     <div class="config-box">
                         https://api.infobip.com/messages-api/1/messages
                     </div>
 
                     <br>
 
-                    <div class="section-title">Sender</div>
+                    <div class="section-title">2. Authentication</div>
                     <div class="config-box">
-                        Metro-Mobilia SAP Bot
+                        Type: Application API Key <br>
+                        Header: Authorization: App {API_KEY}
                     </div>
 
                     <br>
 
-                    <div class="section-title">Auth</div>
+                    <div class="section-title">3. Sender Identity</div>
                     <div class="config-box">
-                        App API Key (Bearer Token)
+                        Viber Sender Name: Metro-Mobilia SAP Bot <br>
+                        Type: Viber Business Messages Sender
+                    </div>
+
+                    <br>
+
+                    <div class="section-title">4. Message Format</div>
+                    <div class="config-box">
+                        TEXT MESSAGE ONLY (Approved Template Based) <br>
+                        Supports dynamic placeholders from SAP
                     </div>
 
                     <p class="small-note mt-2">
-                        Managed via Infobip Business Messages account.
+                        Managed via Infobip Business Messages dashboard.
                     </p>
-
-                </div>
-            </div>
-
-            <!-- FLOW -->
-            <div class="card shadow-sm">
-                <div class="card-header bg-secondary text-white">
-                    Integration Flow
-                </div>
-
-                <div class="card-body small">
-
-                    <span class="badge badge-sap">SAP</span> Event Trigger <br><br>
-
-                    ↓ <br><br>
-
-                    <span class="badge badge-api">Laravel Middleware</span><br>
-                    - Validate request<br>
-                    - Map SAP event to template<br><br>
-
-                    ↓ <br><br>
-
-                    Queue Job (Retry Enabled)<br><br>
-
-                    ↓ <br><br>
-
-                    <span class="badge badge-viber">Infobip Viber API</span><br><br>
-
-                    ↓ <br><br>
-
-                    End User Viber App
 
                 </div>
             </div>
@@ -195,6 +153,97 @@
         </div>
 
     </div>
+
+    <!-- MIDDLE LAYER -->
+    <div class="row">
+
+        <div class="col-md-12">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header bg-dark text-white">
+                    Middleware Layer (Laravel Integration Engine)
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row">
+
+                        <div class="col-md-4">
+                            <div class="section-title">API Gateway</div>
+                            <div class="config-box">
+                                Receives SAP HTTP Request <br>
+                                Validates Token (X-SAP-TOKEN)
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="section-title">Event Mapper</div>
+                            <div class="config-box">
+                                Converts SAP Event → Message Template <br>
+                                Example: SALES_ORDER → Template A
+                            </div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <div class="section-title">Queue System</div>
+                            <div class="config-box">
+                                Async Processing <br>
+                                Retry Enabled (3x) <br>
+                                Fail Logging Enabled
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- FLOW -->
+    <div class="row mt-3">
+
+        <div class="col-md-12">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header bg-secondary text-white">
+                    End-to-End Integration Flow
+                </div>
+
+                <div class="card-body small">
+
+                    <span class="badge badge-sap">SAP</span> Business Event Trigger<br><br>
+
+                    ↓<br><br>
+
+                    <span class="badge badge-layer">Laravel Middleware</span><br>
+                    Validate → Map → Transform<br><br>
+
+                    ↓<br><br>
+
+                    Queue Worker (Retry + Logging)<br><br>
+
+                    ↓<br><br>
+
+                    <span class="badge badge-viber">Infobip Viber API</span><br><br>
+
+                    ↓<br><br>
+
+                    End User Viber App
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
 
 @endsection
