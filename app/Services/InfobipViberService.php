@@ -20,24 +20,18 @@ class InfobipViberService
 
     public function send(string $mobile, string $message)
     {
-        $response = Http::withHeaders([
+        $response = Http::withOptions([
+            'verify' => storage_path('cacert.pem'),
+        ])->withHeaders([
             'Authorization' => 'App ' . $this->apiKey,
-            'Content-Type'  => 'application/json',
-            'Accept'        => 'application/json',
-        ])->post(
-            $this->baseUrl . '/messages-api/1/messages',
-            [
-                'from' => $this->sender,
-                'to' => $mobile,
-                'content' => [
-                    'text' => $message
-                ]
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ])->post($this->baseUrl . '/messages-api/1/messages', [
+            'from' => $this->sender,
+            'to' => $mobile,
+            'content' => [
+                'text' => $message
             ]
-        );
-
-        Log::info('Infobip Viber Response', [
-            'mobile' => $mobile,
-            'response' => $response->json()
         ]);
 
         return $response->json();
