@@ -243,8 +243,7 @@
                                         @if(($row['late_count'] ?? 0) >= 5)
                                             <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
                                                class="btn btn-outline-danger btn-micro-action shadow-sm">
-                                                <i class="bi bi-file-earmark-text"></i>
-                                                <i class="bi bi-download"></i>
+                                                <i class="bi bi-download"></i><span>PDF</span>
                                             </a>
                                         @else
                                             <span class="badge-modern badge-modern-success me-1">
