@@ -245,6 +245,7 @@
                                             class="btn btn-outline-danger btn-micro-action shadow-sm"
                                             title="Download NTE">
                                                 <i class="bi bi-download"></i>
+                                                 <span>PDF</span>
                                         </a>
                                         @else
                                             <span class="badge-modern badge-modern-success me-1">
