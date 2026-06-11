@@ -241,14 +241,11 @@
                                 <td class="pe-4 text-end">
                                     <div class="d-inline-flex gap-2 align-items-center justify-content-end">
                                         @if(($row['late_count'] ?? 0) >= 5)
-                                        <button
-                                            type="button"
-                                            class="btn btn-outline-primary btn-micro-action shadow-sm send-email"
-                                            data-url="{{ url('/reports/nte/email/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
-                                        >
-                                            <i class="bi bi-envelope"></i>
-                                            <span>Email</span>
-                                        </button>
+                                        <a href="{{ url('/reports/nte/email/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
+                                            class="btn btn-outline-primary btn-micro-action shadow-sm">
+                                                <i class="bi bi-envelope"></i>
+                                                <span>Email</span>
+                                        </a>
                                         @else
                                             <span class="badge-modern badge-modern-success me-1">
                                                 <i class="bi bi-check2-circle"></i> Compliant
@@ -324,7 +321,7 @@
       </div>
 
       <div class="modal-body">
-        <p id="responseMessage" class="mb-0"></p>
+        <p id="responseMessage"></p>
       </div>
 
       <div class="modal-footer">
@@ -334,79 +331,61 @@
     </div>
   </div>
 </div>
+@endsection
+
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function (e) {
+        let btn = e.target.closest('.view-late');
+        if (!btn) return;
 
-    const lateModal = new bootstrap.Modal(document.getElementById('lateModal'));
-    const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
+        let empNo = btn.getAttribute('data-id');
+        const modalElement = document.getElementById('lateModal');
+        const modal = new bootstrap.Modal(modalElement);
 
-    const lateBody = document.getElementById('lateBody');
-    const empNoLabel = document.getElementById('empNo');
-    const responseMsg = document.getElementById('responseMessage');
+        document.getElementById('empNo').innerText = empNo;
+        document.getElementById('lateBody').innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center py-5 text-muted">
+                    <div class="spinner-border spinner-border-sm text-indigo-600 me-2" style="color: #4f46e5;" role="status"></div>
+                    <span style="font-size: 0.815rem; font-weight: 500;">Aggregating remote operational state telemetry...</span>
+                </td>
+            </tr>`;
+        
+        modal.show();
 
-    const from = window.reportFilters.from;
-    const to = window.reportFilters.to;
-
-    document.addEventListener('click', async function (e) {
-
-        const viewBtn = e.target.closest('.view-late');
-
-        if (viewBtn) {
-
-            const empNo = viewBtn.dataset.id;
-
-            empNoLabel.textContent = empNo;
-
-            lateBody.innerHTML = `
-                <tr>
-                    <td colspan="3" class="text-center py-4">
-                        Loading...
-                    </td>
-                </tr>
-            `;
-
-            lateModal.show();
-
-            const url = `/reports/late/details/${empNo}?from=${from}&to=${to}`;
-
-            try {
-                const res = await fetch(url);
-
-                if (!res.ok) throw new Error('Failed request');
-
-                const data = await res.json();
-
+        fetch(`/reports/late/details/${empNo}?from={{ $from ?? '' }}&to={{ $to ?? '' }}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Dynamic validation mismatch');
+                return res.json();
+            })
+            .then(res => {
                 let rows = '';
-
-                if (!data.data || data.data.length === 0) {
-                    rows = `<tr><td colspan="3" class="text-center">No records</td></tr>`;
+                if (!res.data || res.data.length === 0) {
+                    rows = `<tr><td colspan="3" class="text-center py-4 text-muted small fw-medium">No system log history exceptions compiled.</td></tr>`;
                 } else {
-                    data.data.forEach(item => {
+                    res.data.forEach(item => {
                         rows += `
                             <tr>
-                                <td>${item.date}</td>
-                                <td>${item.time}</td>
-                                <td>${item.late}</td>
+                                <td class="ps-3.5 fw-medium text-slate-800" style="color: #1e293b;">${item.date}</td>
+                                <td class="font-monospace text-slate-600" style="color: #475569;">${item.time}</td>
+                                <td class="pe-3.5 text-end">
+                                    <span class="badge-modern badge-modern-danger font-monospace px-2 py-0.5">${item.late}</span>
+                                </td>
                             </tr>
                         `;
                     });
                 }
-
-                lateBody.innerHTML = rows;
-
-            } catch (err) {
-                lateBody.innerHTML = `
+                document.getElementById('lateBody').innerHTML = rows;
+            })
+            .catch(err => {
+                document.getElementById('lateBody').innerHTML = `
                     <tr>
-                        <td colspan="3" class="text-danger text-center">
-                            Error loading data
+                        <td colspan="3" class="text-danger text-center py-4 small fw-medium">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Failed to aggregate transaction timeline exceptions.
                         </td>
-                    </tr>
-                `;
-            }
-        }
+                    </tr>`;
+            });
     });
-
-});     
+});
 </script>
-@endsection
-
