@@ -244,7 +244,7 @@
                                             <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
                                                class="btn btn-outline-danger btn-micro-action shadow-sm">
                                                 <i class="bi bi-file-earmark-text"></i>
-                                                <span>Issue NTE</span>
+                                                <i class="bi bi-download"></i>
                                             </a>
                                         @else
                                             <span class="badge-modern badge-modern-success me-1">
