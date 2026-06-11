@@ -59,6 +59,7 @@ class ReportController extends Controller
                 'b.date_log',
                 'b.time_log',
                 'b.tag',
+                'e.email',   // ✅ ADD THIS
                 DB::raw("CONCAT(e.firstName,' ',COALESCE(e.middleName,''),' ',e.lastName) as employeeName")
             )
             ->get();
@@ -427,6 +428,7 @@ private function buildLateSummary($logs)
                 'late_seconds'  => 0,   // ✔ KEEP (REPORTING)
                 'late_count'    => 0,   // ✔ NTE BASIS
                 'halfday_count' => 0,
+                'email'         => $log->email ?? null,   // ✅ ADD THIS
                 'gracePeriod'   => self::GRACE_MINUTES,
             ];
         }
