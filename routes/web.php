@@ -75,6 +75,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/reports/late/details/{employeeNo}', [ReportController::class, 'lateDetails']);
         Route::get('/employee-201', [Employee201Controller::class, 'index']);
         Route::post('/employee-201/save-email', [Employee201Controller::class, 'saveEmail']);
+        Route::get('/reports/nte/email/{employeeNo}', [ReportController::class, 'emailNTE']);
     });
 
     /*

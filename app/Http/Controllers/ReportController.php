@@ -8,6 +8,9 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 use App\Models\BiometricTemp;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class ReportController extends Controller
 {
     private const GRACE_MINUTES = 15;
@@ -57,6 +60,47 @@ class ReportController extends Controller
         ])->setPaper('A4');
 
         return $pdf->download("NTE-{$employeeNo}.pdf");
+    }
+    public function emailNTE(Request $request, $employeeNo)
+    {
+        $logs = $this->getLogs($request->from, $request->to);
+        $summary = $this->buildLateSummary($logs);
+
+        if (!isset($summary[$employeeNo])) {
+            return abort(404, 'No late record found');
+        }
+
+        $employee = $summary[$employeeNo];
+
+        if ($employee['late_count'] < 5) {
+            return response()->json([
+                'success' => false,
+                'message' => 'NTE not required. Employee must have at least 5 late occurrences.'
+            ], 403);
+        }
+
+        // Generate PDF
+        $pdf = Pdf::loadView('hr.reports.nte', [
+            'employee' => $employee,
+            'from' => $request->from,
+            'to' => $request->to
+        ]);
+
+        $pdfContent = $pdf->output();
+
+        // Send Email
+        Mail::raw("Please see attached NTE for employee {$employeeNo}.", function ($message) use ($employee, $pdfContent, $employeeNo) {
+            $message->to('hr@yourcompany.com') // CHANGE THIS
+                    ->subject("NTE Notice - {$employeeNo}")
+                    ->attachData($pdfContent, "NTE-{$employeeNo}.pdf", [
+                        'mime' => 'application/pdf',
+                    ]);
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'NTE sent successfully via email.'
+        ]);
     }
     private function getLogs($from, $to)
     {
