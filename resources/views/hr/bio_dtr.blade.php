@@ -407,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (err) {
             alertBox.innerHTML = `
                 <div class="alert alert-danger border-0 py-1.5 px-3 mb-2 shadow-sm rounded d-flex align-items-center gap-2">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <span>Sync cycle failure.</span>
+                    <i class="bi bi-exclamation-triangle-fill"></i> <span>${err.message}</span>
                 </div>
             `;
             syncBtn.disabled = false;
