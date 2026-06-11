@@ -384,36 +384,72 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initial Trigger Configuration execution
     filterAndSortLogs();
 
-    // SYSTEM SYNC PIPELINE
-    const syncBtn = document.getElementById('syncBtn');
-    const syncText = document.getElementById('syncText');
-    const alertBox = document.getElementById('alertBox');
+// SYSTEM SYNC PIPELINE (REVISED)
+const syncBtn = document.getElementById('syncBtn');
+const syncText = document.getElementById('syncText');
+const alertBox = document.getElementById('alertBox');
 
-    syncBtn.addEventListener('click', async function () {
-        syncBtn.disabled = true;
-        syncText.innerHTML = `<span class="spinner-border spinner-border-sm" style="width: 0.75rem; height: 0.75rem;"></span> Syncing...`;
+syncBtn.addEventListener('click', async function () {
+    syncBtn.disabled = true;
 
-        try {
-            const res = await fetch('/bio-dtr-sync');
-            if (!res.ok) throw new Error('Network error.');
-            const data = await res.json();
+    syncText.innerHTML = `
+        <span class="spinner-border spinner-border-sm"
+        style="width:0.75rem;height:0.75rem;"></span>
+        Syncing...
+    `;
 
-            alertBox.innerHTML = `
-                <div class="alert alert-success border-0 py-1.5 px-3 mb-2 shadow-sm rounded d-flex align-items-center gap-2">
-                    <i class="bi bi-check-circle-fill"></i> <span>${data.message || 'Updated completely.'}</span>
-                </div>
-            `;
-            setTimeout(() => location.reload(), 1000);
-        } catch (err) {
-            alertBox.innerHTML = `
-                <div class="alert alert-danger border-0 py-1.5 px-3 mb-2 shadow-sm rounded d-flex align-items-center gap-2">
-                    <i class="bi bi-exclamation-triangle-fill"></i> <span>${err.message}</span>
-                </div>
-            `;
-            syncBtn.disabled = false;
-            syncText.innerHTML = `<i class="bi bi-arrow-repeat"></i> Sync Logs`;
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+        const res = await fetch('/bio-dtr-sync', {
+            method: 'GET',
+            signal: controller.signal,
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        clearTimeout(timeout);
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok) {
+            throw new Error(data?.message || `Server Error (${res.status})`);
         }
-    });
+
+        alertBox.innerHTML = `
+            <div class="alert alert-success border-0 py-1.5 px-3 mb-2 shadow-sm rounded d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill"></i>
+                <span>${data?.message || 'Sync completed successfully'}</span>
+            </div>
+        `;
+
+        setTimeout(() => location.reload(), 1000);
+
+    } catch (err) {
+
+        let msg = err.message;
+
+        // Better readable errors
+        if (msg === "Failed to fetch") {
+            msg = "Cannot reach server. Check route or network.";
+        }
+        if (msg === "The user aborted a request.") {
+            msg = "Sync timeout (device too slow or unreachable).";
+        }
+
+        alertBox.innerHTML = `
+            <div class="alert alert-danger border-0 py-1.5 px-3 mb-2 shadow-sm rounded d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>${msg}</span>
+            </div>
+        `;
+
+        syncBtn.disabled = false;
+        syncText.innerHTML = `<i class="bi bi-arrow-repeat"></i> Sync Logs`;
+    }
+});
 });
 </script>
 @endsection
