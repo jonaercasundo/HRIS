@@ -241,11 +241,14 @@
                                 <td class="pe-4 text-end">
                                     <div class="d-inline-flex gap-2 align-items-center justify-content-end">
                                         @if(($row['late_count'] ?? 0) >= 5)
-                                        <a href="{{ url('/reports/nte/email/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
-                                            class="btn btn-outline-primary btn-micro-action shadow-sm">
-                                                <i class="bi bi-envelope"></i>
-                                                <span>Email</span>
-                                        </a>
+                                        <button
+                                            type="button"
+                                            class="btn btn-outline-primary btn-micro-action shadow-sm send-email"
+                                            data-url="{{ url('/reports/nte/email/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
+                                        >
+                                            <i class="bi bi-envelope"></i>
+                                            <span>Email</span>
+                                        </button>
                                         @else
                                             <span class="badge-modern badge-modern-success me-1">
                                                 <i class="bi bi-check2-circle"></i> Compliant
@@ -311,62 +314,156 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="responseModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
 
+      <div class="modal-header">
+        <h5 class="modal-title">Notification</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <p id="responseMessage" class="mb-0"></p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+      </div>
+
+    </div>
+  </div>
+</div>
 @endsection
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    document.addEventListener('click', function (e) {
-        let btn = e.target.closest('.view-late');
-        if (!btn) return;
+document.addEventListener('DOMContentLoaded', function () {
 
-        let empNo = btn.getAttribute('data-id');
-        const modalElement = document.getElementById('lateModal');
-        const modal = new bootstrap.Modal(modalElement);
+    const lateModalEl = document.getElementById('lateModal');
+    const responseModalEl = document.getElementById('responseModal');
 
-        document.getElementById('empNo').innerText = empNo;
-        document.getElementById('lateBody').innerHTML = `
-            <tr>
-                <td colspan="3" class="text-center py-5 text-muted">
-                    <div class="spinner-border spinner-border-sm text-indigo-600 me-2" style="color: #4f46e5;" role="status"></div>
-                    <span style="font-size: 0.815rem; font-weight: 500;">Aggregating remote operational state telemetry...</span>
-                </td>
-            </tr>`;
-        
-        modal.show();
+    const lateModal = new bootstrap.Modal(lateModalEl);
+    const responseModal = new bootstrap.Modal(responseModalEl);
 
-        fetch(`/reports/late/details/${empNo}?from={{ $from ?? '' }}&to={{ $to ?? '' }}`)
-            .then(res => {
-                if (!res.ok) throw new Error('Dynamic validation mismatch');
-                return res.json();
-            })
-            .then(res => {
+    const lateBody = document.getElementById('lateBody');
+    const empNoLabel = document.getElementById('empNo');
+    const responseMsg = document.getElementById('responseMessage');
+
+    document.addEventListener('click', async function (e) {
+
+        /* =========================
+           VIEW LATE DETAILS
+        ========================= */
+        const viewBtn = e.target.closest('.view-late');
+        if (viewBtn) {
+
+            const empNo = viewBtn.getAttribute('data-id');
+
+            empNoLabel.innerText = empNo;
+
+            lateBody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center py-5 text-muted">
+                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                        Loading records...
+                    </td>
+                </tr>
+            `;
+
+            lateModal.show();
+
+            try {
+                const res = await fetch(`/reports/late/details/${empNo}?from={{ $from ?? '' }}&to={{ $to ?? '' }}`);
+
+                if (!res.ok) throw new Error('Request failed');
+
+                const data = await res.json();
+
                 let rows = '';
-                if (!res.data || res.data.length === 0) {
-                    rows = `<tr><td colspan="3" class="text-center py-4 text-muted small fw-medium">No system log history exceptions compiled.</td></tr>`;
+
+                if (!data.data || data.data.length === 0) {
+                    rows = `<tr>
+                                <td colspan="3" class="text-center py-4 text-muted">
+                                    No records found.
+                                </td>
+                            </tr>`;
                 } else {
-                    res.data.forEach(item => {
+                    data.data.forEach(item => {
                         rows += `
                             <tr>
-                                <td class="ps-3.5 fw-medium text-slate-800" style="color: #1e293b;">${item.date}</td>
-                                <td class="font-monospace text-slate-600" style="color: #475569;">${item.time}</td>
-                                <td class="pe-3.5 text-end">
-                                    <span class="badge-modern badge-modern-danger font-monospace px-2 py-0.5">${item.late}</span>
+                                <td class="ps-3">${item.date}</td>
+                                <td>${item.time}</td>
+                                <td class="text-end">
+                                    <span class="badge-modern badge-modern-danger">
+                                        ${item.late}
+                                    </span>
                                 </td>
                             </tr>
                         `;
                     });
                 }
-                document.getElementById('lateBody').innerHTML = rows;
-            })
-            .catch(err => {
-                document.getElementById('lateBody').innerHTML = `
+
+                lateBody.innerHTML = rows;
+
+            } catch (err) {
+                lateBody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="text-danger text-center py-4 small fw-medium">
-                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Failed to aggregate transaction timeline exceptions.
+                        <td colspan="3" class="text-danger text-center py-4">
+                            Failed to load data
                         </td>
-                    </tr>`;
-            });
+                    </tr>
+                `;
+            }
+        }
+
+        /* =========================
+           SEND EMAIL
+        ========================= */
+        const emailBtn = e.target.closest('.send-email');
+        if (emailBtn) {
+
+            const url = emailBtn.getAttribute('data-url');
+
+            responseMsg.innerHTML = `
+                <div class="d-flex align-items-center gap-2">
+                    <div class="spinner-border spinner-border-sm text-primary"></div>
+                    Sending email...
+                </div>
+            `;
+
+            responseModal.show();
+
+            try {
+                const res = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'Email failed');
+                }
+
+                responseMsg.innerHTML = `
+                    <div class="text-success fw-semibold">
+                        <i class="bi bi-check-circle-fill me-1"></i>
+                        ${data.message || 'Email sent successfully'}
+                    </div>
+                `;
+
+            } catch (err) {
+                responseMsg.innerHTML = `
+                    <div class="text-danger fw-semibold">
+                        <i class="bi bi-x-circle-fill me-1"></i>
+                        ${err.message}
+                    </div>
+                `;
+            }
+        }
+
     });
+
 });
 </script>
