@@ -212,7 +212,7 @@
                                 <td class="fw-medium text-slate-900" style="color: #0f172a;">{{ $row['employeeName'] }}</td>
                                 <td>
                                     <span class="badge-modern badge-modern-neutral">
-                                        <i class="bi bi-clock-history opacity-70"></i> {{ $row['gracePeriod'] }}m
+                                        <i class="bi bi-clock-history opacity-70"></i> {{ \App\Http\Controllers\ReportController::GRACE_MINUTES ?? 15 }}m
                                     </span>
                                 </td>
                                 <td>
