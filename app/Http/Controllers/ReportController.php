@@ -113,19 +113,21 @@ class ReportController extends Controller
             'attendance.xlsx'
         );
     }
-    public function exportPdf(Request $request)
-    {
-        $logs = $this->getLogs($request->from, $request->to);
-        $data = $this->buildAttendance($logs);
+public function exportPdf(Request $request)
+{
+    $logs = $this->getLogs($request->from, $request->to);
+    $data = $this->buildAttendance($logs);
 
-        $pdf = Pdf::loadView('hr.reports.attendance_pdf', [
-            'data' => array_values($data),
-            'from' => $request->from,
-            'to' => $request->to
-        ])->setPaper('A4', 'landscape');
+    $pdf = app('dompdf.wrapper');
 
-        return $pdf->download('attendance-report.pdf');
-    }
+    $pdf->loadView('hr.reports.attendance_pdf', [
+        'data' => array_values($data),
+        'from' => $request->from,
+        'to' => $request->to
+    ])->setPaper('A4', 'landscape');
+
+    return $pdf->download('attendance-report.pdf');
+}
     public function daily(Request $request)
     {
         $from = $request->from;
