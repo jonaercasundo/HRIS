@@ -10,7 +10,6 @@ class BiometricsController extends Controller
     {
         try {
             require_once app_path('Services/ZKTeco/zklib.php');
-
             $zk = new \ZKLib(
                 config('biometric.bio_ip_1'),
                 config('biometric.bio_port_1')
