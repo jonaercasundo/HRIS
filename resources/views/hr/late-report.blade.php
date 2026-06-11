@@ -241,10 +241,11 @@
                                 <td class="pe-4 text-end">
                                     <div class="d-inline-flex gap-2 align-items-center justify-content-end">
                                         @if(($row['late_count'] ?? 0) >= 5)
-                                            <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
-                                               class="btn btn-outline-danger btn-micro-action shadow-sm">
-                                                <i class="bi bi-download"></i><span>PDF</span>
-                                            </a>
+                                        <a href="{{ url('/reports/nte/'.$row['employeeNo'].'?from='.$from.'&to='.$to) }}"
+                                            class="btn btn-outline-danger btn-micro-action shadow-sm"
+                                            title="Download NTE">
+                                                <i class="bi bi-download"></i>
+                                        </a>
                                         @else
                                             <span class="badge-modern badge-modern-success me-1">
                                                 <i class="bi bi-check2-circle"></i> Compliant
