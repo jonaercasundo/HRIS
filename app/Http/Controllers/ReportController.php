@@ -23,7 +23,6 @@ class ReportController extends Controller
         $from = $request->from;
         $to   = $request->to;
 
-        // Validate required dates
         if (!$from || !$to) {
             return response()->json([
                 'success' => false,
@@ -34,14 +33,12 @@ class ReportController extends Controller
         $logs = $this->getLogs($from, $to);
         $summary = $this->buildLateSummary($logs);
 
-        // Check employee existence
         if (!isset($summary[$employeeNo])) {
             return abort(404, 'No late record found');
         }
 
         $employee = $summary[$employeeNo];
 
-        // FINAL RULE: 5 LATE OCCURRENCES ONLY
         if ($employee['late_count'] < 5) {
             return response()->json([
                 'success' => false,
@@ -49,52 +46,19 @@ class ReportController extends Controller
             ], 403);
         }
 
-        // SAFE PDF GENERATION (NO FACADE)
-        $pdf = app()->make('dompdf.wrapper');
-
-        $pdf->loadView('hr.reports.nte', [
-            'employee' => $employee,
-            'from'     => $from,
-            'to'       => $to
-        ])->setPaper('A4');
-
-        return $pdf->download("NTE-{$employeeNo}.pdf");
+        // ✅ instead of PDF: send email
+        return $this->sendNTEEmail($employee, $from, $to);
     }
-    public function emailNTE(Request $request, $employeeNo)
+    private function sendNTEEmail($employee, $from, $to)
     {
-        $logs = $this->getLogs($request->from, $request->to);
-        $summary = $this->buildLateSummary($logs);
-
-        if (!isset($summary[$employeeNo])) {
-            return abort(404, 'No late record found');
-        }
-
-        $employee = $summary[$employeeNo];
-
-        if ($employee['late_count'] < 5) {
-            return response()->json([
-                'success' => false,
-                'message' => 'NTE not required. Employee must have at least 5 late occurrences.'
-            ], 403);
-        }
-
-        // Generate PDF
-        $pdf = app('dompdf.wrapper');
-        $pdf->loadView('hr.reports.nte', [
+        Mail::send('emails.nte', [
             'employee' => $employee,
-            'from' => $request->from,
-            'to' => $request->to
-        ]);
+            'from' => $from,
+            'to' => $to
+        ], function ($message) use ($employee) {
 
-        $pdfContent = $pdf->output();
-
-        // Send Email
-        Mail::raw("Please see attached NTE for employee {$employeeNo}.", function ($message) use ($employee, $pdfContent, $employeeNo) {
-            $message->to('hr@yourcompany.com') // CHANGE THIS
-                    ->subject("NTE Notice - {$employeeNo}")
-                    ->attachData($pdfContent, "NTE-{$employeeNo}.pdf", [
-                        'mime' => 'application/pdf',
-                    ]);
+            $message->to('hr@yourcompany.com') // change this
+                    ->subject("NTE Notice - {$employee['employeeNo']}");
         });
 
         return response()->json([
