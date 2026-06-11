@@ -18,10 +18,21 @@ class ReportController extends Controller
     }
     public function generateNTE(Request $request, $employeeNo)
     {
-        $logs = $this->getLogs($request->from, $request->to);
+        $from = $request->from;
+        $to   = $request->to;
 
+        // Validate required dates
+        if (!$from || !$to) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Date range (from/to) is required.'
+            ], 422);
+        }
+
+        $logs = $this->getLogs($from, $to);
         $summary = $this->buildLateSummary($logs);
 
+        // Check employee existence
         if (!isset($summary[$employeeNo])) {
             return abort(404, 'No late record found');
         }
@@ -36,13 +47,13 @@ class ReportController extends Controller
             ], 403);
         }
 
-        // ✅ FIX: NO FACADE USAGE
-        $pdf = app('dompdf.wrapper');
+        // SAFE PDF GENERATION (NO FACADE)
+        $pdf = app()->make('dompdf.wrapper');
 
         $pdf->loadView('hr.reports.nte', [
             'employee' => $employee,
-            'from' => $request->from,
-            'to' => $request->to
+            'from'     => $from,
+            'to'       => $to
         ])->setPaper('A4');
 
         return $pdf->download("NTE-{$employeeNo}.pdf");
