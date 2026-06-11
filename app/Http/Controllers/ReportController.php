@@ -293,4 +293,36 @@ class ReportController extends Controller
             'to' => $request->to
         ]);
     }
+    public function lateDetails(Request $request, $employeeNo)
+{
+    try {
+
+        $from = $request->from;
+        $to = $request->to;
+
+        if (!$from || !$to) {
+            return response()->json([
+                'data' => [],
+                'message' => 'Invalid date range'
+            ]);
+        }
+
+        $logs = $this->getLogs($from, $to);
+
+        $filtered = $logs->filter(function ($log) use ($employeeNo) {
+            return $log->employee_no === $employeeNo
+                && strtoupper($log->tag ?? '') === 'IN';
+        });
+
+        return response()->json([
+            'data' => $filtered->values()
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'data' => [],
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
 }

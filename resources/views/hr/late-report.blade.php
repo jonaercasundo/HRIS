@@ -357,7 +357,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (viewBtn) {
 
             const empNo = viewBtn.getAttribute('data-id');
+            const from = "{{ $from ?? '' }}";
+            const to = "{{ $to ?? '' }}";
 
+            const url = `/reports/late/details/${empNo}?from=${from}&to=${to}`;
+
+            lateModal.show();
+
+            const res = await fetch(url);
             empNoLabel.innerText = empNo;
 
             lateBody.innerHTML = `
