@@ -9,7 +9,6 @@ use App\Exports\AttendanceExport;
 use App\Models\BiometricTemp;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Mail;
-use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReportController extends Controller
 {
@@ -80,7 +79,8 @@ class ReportController extends Controller
         }
 
         // Generate PDF
-        $pdf = Pdf::loadView('hr.reports.nte', [
+        $pdf = app('dompdf.wrapper');
+        $pdf->loadView('hr.reports.nte', [
             'employee' => $employee,
             'from' => $request->from,
             'to' => $request->to
