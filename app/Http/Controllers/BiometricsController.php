@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Biometric;
 use App\Models\BiometricTemp;
-use Barryvdh\DomPDF\Facade\Pdf;
 class BiometricsController extends Controller
 {
     public function syncBio1()

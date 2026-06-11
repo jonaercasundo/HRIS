@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 use App\Models\BiometricTemp;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 class ReportController extends Controller
 {
@@ -29,7 +28,7 @@ class ReportController extends Controller
 
         $employee = $summary[$employeeNo];
 
-        // ✅ FINAL RULE: 5 LATE OCCURRENCES ONLY
+        // FINAL RULE: 5 LATE OCCURRENCES ONLY
         if ($employee['late_count'] < 5) {
             return response()->json([
                 'success' => false,
@@ -37,7 +36,10 @@ class ReportController extends Controller
             ], 403);
         }
 
-        $pdf = Pdf::loadView('hr.reports.nte', [
+        // ✅ FIX: NO FACADE USAGE
+        $pdf = app('dompdf.wrapper');
+
+        $pdf->loadView('hr.reports.nte', [
             'employee' => $employee,
             'from' => $request->from,
             'to' => $request->to
