@@ -116,7 +116,7 @@
 
                     <div class="section-title">1. API Endpoint</div>
                     <div class="config-box">
-                        https://api.infobip.com/messages-api/1/messages
+                        https://api.infobip.com/viber/1/messages
                     </div>
 
                     <br>
@@ -131,10 +131,9 @@
 
                     <div class="section-title">3. Sender Identity</div>
                     <div class="config-box">
-                        Viber Sender Name: Metro-Mobilia SAP Bot <br>
-                        Type: Viber Business Messages Sender
+                        Viber Sender: IBSelfServe (Temporary / Testing) <br>
+                        Status: Pending Approval (Production Sender Not Yet Active)
                     </div>
-
                     <br>
 
                     <div class="section-title">4. Message Format</div>
