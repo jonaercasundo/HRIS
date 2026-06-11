@@ -49,17 +49,41 @@ class ReportController extends Controller
         // ✅ instead of PDF: send email
         return $this->sendNTEEmail($employee, $from, $to);
     }
-    private function sendNTEEmail($employee, $from, $to)
+    public function emailNTE(Request $request, $employeeNo)
     {
-        Mail::send('emails.nte', [
-            'employee' => $employee,
-            'from' => $from,
-            'to' => $to
-        ], function ($message) use ($employee) {
+        $from = $request->from;
+        $to   = $request->to;
 
-            $message->to('hr@yourcompany.com') // change this
-                    ->subject("NTE Notice - {$employee['employeeNo']}");
-        });
+        if (!$from || !$to) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Date range (from/to) is required.'
+            ], 422);
+        }
+
+        $logs = $this->getLogs($from, $to);
+        $summary = $this->buildLateSummary($logs);
+
+        if (!isset($summary[$employeeNo])) {
+            return abort(404, 'No late record found');
+        }
+
+        $employee = $summary[$employeeNo];
+
+        if ($employee['late_count'] < 5) {
+            return response()->json([
+                'success' => false,
+                'message' => 'NTE not required. Employee must have at least 5 late occurrences.'
+            ], 403);
+        }
+
+        Mail::raw(
+            "NTE Notice for {$employeeNo} - {$employee['employeeName']}",
+            function ($message) use ($employeeNo) {
+                $message->to('hr@yourcompany.com')
+                        ->subject("NTE Notice - {$employeeNo}");
+            }
+        );
 
         return response()->json([
             'success' => true,
