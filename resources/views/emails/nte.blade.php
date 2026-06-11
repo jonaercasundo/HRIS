@@ -1,4 +1,4 @@
-<h3>NTE Notice</h3>
+<h3>TEST ONLY</h3>
 
 <p><strong>Employee:</strong> {{ $employee['employeeName'] }}</p>
 <p><strong>Employee No:</strong> {{ $employee['employeeNo'] }}</p>
@@ -10,4 +10,4 @@
 
 <hr>
 
-<p>This is an automated notice regarding repeated tardiness.</p>
+<p>This is an TEST ONLY Please disregard.</p>
