@@ -334,76 +334,59 @@
     </div>
   </div>
 </div>
-@endsection
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-    const lateModalEl = document.getElementById('lateModal');
-    const responseModalEl = document.getElementById('responseModal');
-
-    const lateModal = new bootstrap.Modal(lateModalEl);
-    const responseModal = new bootstrap.Modal(responseModalEl);
+    const lateModal = new bootstrap.Modal(document.getElementById('lateModal'));
+    const responseModal = new bootstrap.Modal(document.getElementById('responseModal'));
 
     const lateBody = document.getElementById('lateBody');
     const empNoLabel = document.getElementById('empNo');
     const responseMsg = document.getElementById('responseMessage');
 
+    const from = window.reportFilters.from;
+    const to = window.reportFilters.to;
+
     document.addEventListener('click', async function (e) {
 
-        /* =========================
-           VIEW LATE DETAILS
-        ========================= */
         const viewBtn = e.target.closest('.view-late');
+
         if (viewBtn) {
 
-            const empNo = viewBtn.getAttribute('data-id');
-            const from = "{{ $from ?? '' }}";
-            const to = "{{ $to ?? '' }}";
+            const empNo = viewBtn.dataset.id;
 
-            const url = `/reports/late/details/${empNo}?from=${from}&to=${to}`;
-
-            lateModal.show();
-
-            const res = await fetch(url);
-            empNoLabel.innerText = empNo;
+            empNoLabel.textContent = empNo;
 
             lateBody.innerHTML = `
                 <tr>
-                    <td colspan="3" class="text-center py-5 text-muted">
-                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                        Loading records...
+                    <td colspan="3" class="text-center py-4">
+                        Loading...
                     </td>
                 </tr>
             `;
 
             lateModal.show();
 
-            try {
-                const res = await fetch(`/reports/late/details/${empNo}?from={{ $from ?? '' }}&to={{ $to ?? '' }}`);
+            const url = `/reports/late/details/${empNo}?from=${from}&to=${to}`;
 
-                if (!res.ok) throw new Error('Request failed');
+            try {
+                const res = await fetch(url);
+
+                if (!res.ok) throw new Error('Failed request');
 
                 const data = await res.json();
 
                 let rows = '';
 
                 if (!data.data || data.data.length === 0) {
-                    rows = `<tr>
-                                <td colspan="3" class="text-center py-4 text-muted">
-                                    No records found.
-                                </td>
-                            </tr>`;
+                    rows = `<tr><td colspan="3" class="text-center">No records</td></tr>`;
                 } else {
                     data.data.forEach(item => {
                         rows += `
                             <tr>
-                                <td class="ps-3">${item.date}</td>
+                                <td>${item.date}</td>
                                 <td>${item.time}</td>
-                                <td class="text-end">
-                                    <span class="badge-modern badge-modern-danger">
-                                        ${item.late}
-                                    </span>
-                                </td>
+                                <td>${item.late}</td>
                             </tr>
                         `;
                     });
@@ -414,63 +397,16 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (err) {
                 lateBody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="text-danger text-center py-4">
-                            Failed to load data
+                        <td colspan="3" class="text-danger text-center">
+                            Error loading data
                         </td>
                     </tr>
                 `;
             }
         }
-
-        /* =========================
-           SEND EMAIL
-        ========================= */
-        const emailBtn = e.target.closest('.send-email');
-        if (emailBtn) {
-
-            const url = emailBtn.getAttribute('data-url');
-
-            responseMsg.innerHTML = `
-                <div class="d-flex align-items-center gap-2">
-                    <div class="spinner-border spinner-border-sm text-primary"></div>
-                    Sending email...
-                </div>
-            `;
-
-            responseModal.show();
-
-            try {
-                const res = await fetch(url, {
-                    method: 'GET',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-
-                const data = await res.json();
-
-                if (!res.ok || !data.success) {
-                    throw new Error(data.message || 'Email failed');
-                }
-
-                responseMsg.innerHTML = `
-                    <div class="text-success fw-semibold">
-                        <i class="bi bi-check-circle-fill me-1"></i>
-                        ${data.message || 'Email sent successfully'}
-                    </div>
-                `;
-
-            } catch (err) {
-                responseMsg.innerHTML = `
-                    <div class="text-danger fw-semibold">
-                        <i class="bi bi-x-circle-fill me-1"></i>
-                        ${err.message}
-                    </div>
-                `;
-            }
-        }
-
     });
 
-});
+});     
 </script>
+@endsection
+
