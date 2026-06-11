@@ -12,8 +12,7 @@ use Illuminate\Support\Facades\Mail;
 
 class ReportController extends Controller
 {
-    private const GRACE_MINUTES = 15;
-
+    public const GRACE_MINUTES = 15;
     private $holidaysCache = null;
 
     /* =========================
