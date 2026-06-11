@@ -11,8 +11,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 class ReportController extends Controller
 {
-    private const GRACE_MINUTES = 15;
-    private const NTE_THRESHOLD_SECONDS = 14400; // 4 hours
+    public const GRACE_MINUTES = 15;
     private function isHalfDayByTime($timeIn)
     {
         return strtotime($timeIn) >= strtotime('12:00:00');
