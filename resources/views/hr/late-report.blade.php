@@ -337,68 +337,58 @@
 @endsection
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('click', function (e) {
+        let btn = e.target.closest('.view-late');
+        if (!btn) return;
 
-    const responseModalEl = document.getElementById('responseModal');
-    const responseModal = new bootstrap.Modal(responseModalEl);
-    const responseMsg = document.getElementById('responseMessage');
+        let empNo = btn.getAttribute('data-id');
+        const modalElement = document.getElementById('lateModal');
+        const modal = new bootstrap.Modal(modalElement);
 
-    document.addEventListener('click', async function (e) {
+        document.getElementById('empNo').innerText = empNo;
+        document.getElementById('lateBody').innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center py-5 text-muted">
+                    <div class="spinner-border spinner-border-sm text-indigo-600 me-2" style="color: #4f46e5;" role="status"></div>
+                    <span style="font-size: 0.815rem; font-weight: 500;">Aggregating remote operational state telemetry...</span>
+                </td>
+            </tr>`;
+        
+        modal.show();
 
-        const emailBtn = e.target.closest('.send-email');
-        if (!emailBtn) return;
-
-        const url = emailBtn.getAttribute('data-url');
-
-        // SHOW LOADING MODAL
-        responseMsg.innerHTML = `
-            <div class="d-flex align-items-center gap-2">
-                <div class="spinner-border spinner-border-sm text-primary"></div>
-                Sending email...
-            </div>
-        `;
-
-        responseModal.show();
-
-        try {
-            const res = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
+        fetch(`/reports/late/details/${empNo}?from={{ $from ?? '' }}&to={{ $to ?? '' }}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Dynamic validation mismatch');
+                return res.json();
+            })
+            .then(res => {
+                let rows = '';
+                if (!res.data || res.data.length === 0) {
+                    rows = `<tr><td colspan="3" class="text-center py-4 text-muted small fw-medium">No system log history exceptions compiled.</td></tr>`;
+                } else {
+                    res.data.forEach(item => {
+                        rows += `
+                            <tr>
+                                <td class="ps-3.5 fw-medium text-slate-800" style="color: #1e293b;">${item.date}</td>
+                                <td class="font-monospace text-slate-600" style="color: #475569;">${item.time}</td>
+                                <td class="pe-3.5 text-end">
+                                    <span class="badge-modern badge-modern-danger font-monospace px-2 py-0.5">${item.late}</span>
+                                </td>
+                            </tr>
+                        `;
+                    });
                 }
+                document.getElementById('lateBody').innerHTML = rows;
+            })
+            .catch(err => {
+                document.getElementById('lateBody').innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-danger text-center py-4 small fw-medium">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Failed to aggregate transaction timeline exceptions.
+                        </td>
+                    </tr>`;
             });
-
-            const data = await res.json();
-
-            // ❌ ERROR RESPONSE (STILL SHOW IN MODAL)
-            if (!res.ok || data.success === false) {
-                responseMsg.innerHTML = `
-                    <div class="text-danger fw-semibold">
-                        <i class="bi bi-x-circle-fill me-1"></i>
-                        ${data.message ?? 'Failed to send email'}
-                    </div>
-                `;
-                return;
-            }
-
-            // ✅ SUCCESS RESPONSE
-            responseMsg.innerHTML = `
-                <div class="text-success fw-semibold">
-                    <i class="bi bi-check-circle-fill me-1"></i>
-                    ${data.message ?? 'Email sent successfully'}
-                </div>
-            `;
-
-        } catch (err) {
-            responseMsg.innerHTML = `
-                <div class="text-danger fw-semibold">
-                    <i class="bi bi-x-circle-fill me-1"></i>
-                    ${err.message}
-                </div>
-            `;
-        }
     });
-
 });
 </script>
