@@ -7,9 +7,8 @@ use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 use App\Models\BiometricTemp;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Mail;
-
 class ReportController extends Controller
 {
     private const GRACE_MINUTES = 15;
@@ -20,17 +19,8 @@ class ReportController extends Controller
     }
     public function generateNTE(Request $request, $employeeNo)
     {
-        $from = $request->from;
-        $to   = $request->to;
+        $logs = $this->getLogs($request->from, $request->to);
 
-        if (!$from || !$to) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Date range (from/to) is required.'
-            ], 422);
-        }
-
-        $logs = $this->getLogs($from, $to);
         $summary = $this->buildLateSummary($logs);
 
         if (!isset($summary[$employeeNo])) {
@@ -39,6 +29,7 @@ class ReportController extends Controller
 
         $employee = $summary[$employeeNo];
 
+        // ✅ FINAL RULE: 5 LATE OCCURRENCES ONLY
         if ($employee['late_count'] < 5) {
             return response()->json([
                 'success' => false,
@@ -46,56 +37,13 @@ class ReportController extends Controller
             ], 403);
         }
 
-        // ✅ instead of PDF: send email
-        return $this->sendNTEEmail($employee, $from, $to);
-    }
-    public function emailNTE(Request $request, $employeeNo)
-    {
-        $from = $request->from;
-        $to   = $request->to;
+        $pdf = Pdf::loadView('hr.reports.nte', [
+            'employee' => $employee,
+            'from' => $request->from,
+            'to' => $request->to
+        ])->setPaper('A4');
 
-        if (!$from || !$to) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Date range (from/to) is required.'
-            ], 422);
-        }
-
-        $logs = $this->getLogs($from, $to);
-        $summary = $this->buildLateSummary($logs);
-
-        if (!isset($summary[$employeeNo])) {
-            return abort(404, 'No late record found');
-        }
-
-        $employee = $summary[$employeeNo];
-
-        if ($employee['late_count'] < 5) {
-            return response()->json([
-                'success' => false,
-                'message' => 'NTE not required. Employee must have at least 5 late occurrences.'
-            ], 403);
-        }
-
-        if (!$employee['email']) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Employee email not found in database.'
-            ], 422);
-        }
-
-        Mail::raw(
-            "Dear {$employee['employeeName']},\n\nThis is your Notice to Explain (NTE) regarding your attendance record.\n\nRegards,\nHR",
-            function ($message) use ($employee, $employeeNo) {
-                $message->to($employee['email']) // ✅ REAL EMAIL FROM DB
-                        ->subject("NTE Notice - {$employeeNo}");
-            }
-        );
-
-        return response()->json([
-            'success' => true,
-            'message' => 'NTE sent successfully to employee email.'
-        ]);
+        return $pdf->download("NTE-{$employeeNo}.pdf");
     }
     private function getLogs($from, $to)
     {
@@ -165,21 +113,53 @@ class ReportController extends Controller
             'attendance.xlsx'
         );
     }
-public function exportPdf(Request $request)
-{
-    $logs = $this->getLogs($request->from, $request->to);
-    $data = $this->buildAttendance($logs);
+        /* =========================
+     | EMAIL NTE (DIRECT)
+     ========================= */
+    public function emailNTE(Request $request, $employeeNo)
+    {
+        $employee = $this->getEmployeeSummary($employeeNo, $request->from, $request->to);
 
-    $pdf = app('dompdf.wrapper');
+        if (!$employee) {
+            return abort(404, 'No record found');
+        }
 
-    $pdf->loadView('hr.reports.attendance_pdf', [
-        'data' => array_values($data),
-        'from' => $request->from,
-        'to' => $request->to
-    ])->setPaper('A4', 'landscape');
+        if (!$employee['email']) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Employee email not found.'
+            ], 422);
+        }
 
-    return $pdf->download('attendance-report.pdf');
-}
+        if ($employee['late_count'] < 5) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Minimum 5 late occurrences required.'
+            ], 403);
+        }
+
+        return $this->sendNTEEmail($employee);
+    }
+     private function getEmployeeSummary($employeeNo, $from, $to)
+    {
+        $logs = $this->getLogs($from, $to);
+        $summary = $this->buildLateSummary($logs);
+
+        return $summary[$employeeNo] ?? null;
+    }
+    public function exportPdf(Request $request)
+    {
+        $logs = $this->getLogs($request->from, $request->to);
+        $data = $this->buildAttendance($logs);
+
+        $pdf = Pdf::loadView('hr.reports.attendance_pdf', [
+            'data' => array_values($data),
+            'from' => $request->from,
+            'to' => $request->to
+        ])->setPaper('A4', 'landscape');
+
+        return $pdf->download('attendance-report.pdf');
+    }
     public function daily(Request $request)
     {
         $from = $request->from;
