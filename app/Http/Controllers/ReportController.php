@@ -261,7 +261,7 @@ class ReportController extends Controller
         $summary = $this->buildLateSummary($logs);
         // REMOVE zero late
         $summary = array_filter($summary, function ($row) {
-            return $row['late_seconds'] > 0;
+            return $row['late_seconds'] > 5;
         });
 
         return view('hr.late', [
