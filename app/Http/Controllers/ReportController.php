@@ -259,9 +259,9 @@ class ReportController extends Controller
         $logs = $this->getLogs($request->from, $request->to);
 
         $summary = $this->buildLateSummary($logs);
-        // SHOW ONLY EMPLOYEES WITH 4 OR MORE LATES
+        // SHOW ONLY EMPLOYEES WITH 5 OR MORE LATES
         $summary = array_filter($summary, function ($row) {
-            return $row['late_count'] >= 4;
+            return $row['late_count'] >= 5;
         });
 
         return view('hr.late', [
@@ -327,7 +327,7 @@ class ReportController extends Controller
 
         // ❌ REMOVE employees with 0 late
         $summary = array_filter($summary, function ($row) {
-            return $row['late_count'] >= 4;
+            return $row['late_count'] >= 5;
         });
 
         $grandTotalLates = array_sum(array_column($summary, 'late_seconds'));
